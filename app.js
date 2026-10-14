@@ -12,7 +12,7 @@ document.addEventListener('DOMContentLoaded', () => {
             targetPane.classList.add('active');
 
             if (btn.dataset.target === 'tab-home' && map) {
-                setTimeout(() => map.invalidateSize(), 150);
+                setTimeout(() => map.invalidateSize(), 200);
             }
         });
     });
@@ -25,37 +25,36 @@ document.addEventListener('DOMContentLoaded', () => {
         statusText.textContent = text;
     }
 
-    // GEOLOCALIZAÇÃO E MAPA LEAFLET
-    const geoStatus = document.getElementById('geo-status');
-    const geoCoords = document.getElementById('geo-coords');
-    const btnGetLocation = document.getElementById('btn-get-location');
-    let lastCoords = null;
+    // MAPA LEAFLET GLOBAL
     let map = null;
     let marker = null;
 
-    function initMap(lat, lon) {
+    // Inicializar mapa com coordenadas padrão (ex: Brasil / Centro) para ele renderizar imediatamente
+    function initDefaultMap(lat = -15.7801, lon = -47.9292, zoom = 4) {
         if (!map) {
-            map = L.map('map-container').setView([lat, lon], 15);
+            map = L.map('map').setView([lat, lon], zoom);
             L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
                 maxZoom: 19,
                 attribution: '© OpenStreetMap'
             }).addTo(map);
-
-            marker = L.marker([lat, lon]).addTo(map)
-                .bindPopup('<b>Você está aqui</b><br>Sentinela One Ativo').openPopup();
-        } else {
-            map.setView([lat, lon], 15);
-            marker.setLatLng([lat, lon]);
-            map.invalidateSize();
         }
     }
 
+    // Chamar inicialização padrão logo ao carregar
+    initDefaultMap();
+
+    // GEOLOCALIZAÇÃO
+    const geoStatus = document.getElementById('geo-status');
+    const geoCoords = document.getElementById('geo-coords');
+    const btnGetLocation = document.getElementById('btn-get-location');
+    let lastCoords = null;
+
     btnGetLocation.addEventListener('click', () => {
         if (!navigator.geolocation) {
-            geoStatus.textContent = "Geolocalização não suportada pelo navegador.";
+            geoStatus.textContent = "Geolocalização não suportada.";
             return;
         }
-        geoStatus.textContent = "Solicitando permissão de GPS...";
+        geoStatus.textContent = "Obtendo GPS...";
         navigator.geolocation.getCurrentPosition(
             (position) => {
                 const lat = position.coords.latitude.toFixed(5);
@@ -63,13 +62,25 @@ document.addEventListener('DOMContentLoaded', () => {
                 lastCoords = { lat, lon };
                 geoCoords.textContent = `Lat: ${lat} | Long: ${lon}`;
                 geoStatus.textContent = "Localização obtida com sucesso!";
+
+                // Centralizar mapa na posição real do usuário
+                const userLat = position.coords.latitude;
+                const userLon = position.coords.longitude;
                 
-                initMap(position.coords.latitude, position.coords.longitude);
+                map.setView([userLat, userLon], 16);
+                if (marker) {
+                    marker.setLatLng([userLat, userLon]);
+                } else {
+                    marker = L.marker([userLat, userLon]).addTo(map)
+                        .bindPopup('<b>Você está aqui</b>').openPopup();
+                }
+                map.invalidateSize();
+
                 addHistory("Localização e mapa atualizados.");
                 updateSOSMessage();
             },
             (error) => {
-                geoStatus.textContent = "Erro ao obter GPS: " + error.message;
+                geoStatus.textContent = "Erro GPS: " + error.message;
                 addHistory("Falha na obtenção de localização.");
             },
             { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
