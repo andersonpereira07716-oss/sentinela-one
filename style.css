@@ -7,7 +7,7 @@
     --accent-amber: #FFB703;
     --accent-red: #E63946;
     --accent-green: #2A9D8F;
-    --border-radius: 12px;
+    --border-radius: 14px;
 }
 
 * {
@@ -20,7 +20,7 @@
 body {
     background-color: var(--bg-main);
     color: var(--text-primary);
-    padding-bottom: 20px;
+    padding-bottom: 24px;
 }
 
 .app-container {
@@ -35,10 +35,11 @@ body {
     justify-content: space-between;
     align-items: center;
     background-color: var(--card-bg);
-    padding: 12px 16px;
+    padding: 14px 16px;
     border-radius: var(--border-radius);
     margin-bottom: 12px;
-    border: 1px solid rgba(0, 240, 255, 0.1);
+    border: 1px solid rgba(0, 240, 255, 0.2);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
 }
 
 .logo-area {
@@ -51,7 +52,7 @@ body {
     font-size: 20px;
     background: rgba(0, 240, 255, 0.1);
     padding: 8px;
-    border-radius: 8px;
+    border-radius: 10px;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -74,9 +75,10 @@ body {
     align-items: center;
     gap: 6px;
     font-size: 11px;
-    background: rgba(0,0,0,0.3);
+    background: rgba(0,0,0,0.4);
     padding: 6px 10px;
     border-radius: 20px;
+    border: 1px solid rgba(255, 255, 255, 0.05);
 }
 
 .dot {
@@ -98,6 +100,7 @@ body {
     padding: 4px;
     margin-bottom: 12px;
     gap: 4px;
+    border: 1px solid rgba(255, 255, 255, 0.05);
 }
 
 .tab-btn {
@@ -108,19 +111,20 @@ body {
     padding: 10px 4px;
     font-size: 12px;
     font-weight: 600;
-    border-radius: 8px;
+    border-radius: 10px;
     cursor: pointer;
     white-space: nowrap;
     text-align: center;
-    transition: all 0.2s;
+    transition: all 0.2s ease;
 }
 
 .tab-btn.active {
     background-color: var(--accent-cyan);
     color: var(--bg-main);
+    box-shadow: 0 0 10px rgba(0, 240, 255, 0.4);
 }
 
-/* CONTEÚDO E ABAS (OCULTAS POR PADRÃO) */
+/* CONTEÚDO E ABAS */
 .tab-pane {
     display: none;
 }
@@ -134,7 +138,8 @@ body {
     border-radius: var(--border-radius);
     padding: 16px;
     margin-bottom: 12px;
-    border: 1px solid rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.06);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.2);
 }
 
 .hero-card {
@@ -181,15 +186,27 @@ body {
     font-weight: 600;
 }
 
-/* MAPA LEAFLET */
+/* MAPA LEAFLET COM MODO ESCURO AUTOMÁTICO */
 #map {
     width: 100%;
-    height: 200px;
-    background-color: #111a30;
-    border-radius: 8px;
+    height: 220px;
+    background-color: #0B132B;
+    border-radius: 10px;
     border: 1px solid rgba(0, 240, 255, 0.3);
+    box-shadow: 0 0 12px rgba(0, 240, 255, 0.15);
     margin-bottom: 12px;
     z-index: 10;
+}
+
+/* Aplicação de filtros para criar o Dark Mode elegante nos azulejos do mapa */
+.leaflet-layer,
+.leaflet-control-zoom,
+.leaflet-control-attribution {
+    filter: brightness(0.85) invert(1) hue-rotate(180deg) contrast(1.15) saturate(0.7);
+}
+
+.leaflet-container {
+    background-color: #0B132B !important;
 }
 
 /* BOTÕES E FORMULÁRIOS */
@@ -208,7 +225,7 @@ body {
     padding: 14px;
     font-size: 14px;
     font-weight: bold;
-    border-radius: 8px;
+    border-radius: 10px;
     text-decoration: none;
     width: 100%;
 }
@@ -223,7 +240,7 @@ body {
 .btn {
     width: 100%;
     padding: 12px;
-    border-radius: 8px;
+    border-radius: 10px;
     border: none;
     font-size: 14px;
     font-weight: bold;
@@ -240,6 +257,7 @@ body {
 .btn-primary {
     background-color: var(--accent-cyan);
     color: var(--bg-main);
+    box-shadow: 0 0 10px rgba(0, 240, 255, 0.3);
 }
 
 .btn-secondary {
@@ -250,6 +268,7 @@ body {
 .btn-danger {
     background-color: var(--accent-red);
     color: white;
+    box-shadow: 0 0 10px rgba(230, 57, 70, 0.3);
 }
 
 .btn-success {
@@ -287,22 +306,23 @@ body {
 .form-group input {
     width: 100%;
     padding: 10px;
-    background: rgba(0, 0, 0, 0.2);
+    background: rgba(0, 0, 0, 0.25);
     border: 1px solid rgba(255, 255, 255, 0.1);
-    border-radius: 8px;
+    border-radius: 10px;
     color: white;
     font-size: 14px;
 }
 
 .coords-box {
-    background: rgba(0,0,0,0.3);
-    padding: 8px;
-    border-radius: 6px;
+    background: rgba(0,0,0,0.4);
+    padding: 10px;
+    border-radius: 8px;
     font-family: monospace;
     font-size: 12px;
     color: var(--accent-cyan);
     margin-bottom: 10px;
     text-align: center;
+    border: 1px solid rgba(0, 240, 255, 0.1);
 }
 
 .timer-display {
@@ -333,7 +353,7 @@ body {
 }
 
 .contact-item, .history-item {
-    background: rgba(0,0,0,0.2);
+    background: rgba(0,0,0,0.25);
     padding: 10px;
     border-radius: 8px;
     display: flex;
@@ -345,11 +365,11 @@ body {
 .text-area-box {
     width: 100%;
     height: 70px;
-    background: rgba(0,0,0,0.3);
+    background: rgba(0,0,0,0.4);
     border: 1px solid rgba(255,255,255,0.1);
     color: var(--text-muted);
     padding: 8px;
-    border-radius: 6px;
+    border-radius: 8px;
     font-size: 12px;
     margin-bottom: 8px;
     resize: none;
