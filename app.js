@@ -8,7 +8,13 @@ document.addEventListener('DOMContentLoaded', () => {
             tabButtons.forEach(b => b.classList.remove('active'));
             tabPanes.forEach(p => p.classList.remove('active'));
             btn.classList.add('active');
-            document.getElementById(btn.dataset.target).classList.add('active');
+            const targetPane = document.getElementById(btn.dataset.target);
+            targetPane.classList.add('active');
+
+            // Recalcular tamanho do mapa se for a aba Início
+            if (btn.dataset.target === 'tab-home' && map) {
+                setTimeout(() => map.invalidateSize(), 200);
+            }
         });
     });
 
@@ -21,11 +27,38 @@ document.addEventListener('DOMContentLoaded', () => {
         statusText.textContent = text;
     }
 
-    // GEOLOCALIZAÇÃO
+    // GEOLOCALIZAÇÃO E MAPA LEAFLET
     const geoStatus = document.getElementById('geo-status');
     const geoCoords = document.getElementById('geo-coords');
     const btnGetLocation = document.getElementById('btn-get-location');
     let lastCoords = null;
+    let map = null;
+    let marker = null;
+
+    function initMap(lat, lon) {
+        const container = document.getElementById('map-container');
+        container.innerHTML = ''; // Limpar mensagem inicial
+
+        map = L.map('map-container').setView([lat, lon], 15);
+
+        // Camada do OpenStreetMap com visualização escurecida
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            maxZoom: 19,
+            attribution: '© OpenStreetMap'
+        }).addTo(map);
+
+        marker = L.marker([lat, lon]).addTo(map)
+            .bindPopup('<b>Você está aqui</b><br>Sentinela One Ativo').openPopup();
+    }
+
+    function updateMap(lat, lon) {
+        if (!map) {
+            initMap(lat, lon);
+        } else {
+            map.setView([lat, lon], 15);
+            marker.setLatLng([lat, lon]);
+        }
+    }
 
     btnGetLocation.addEventListener('click', () => {
         if (!navigator.geolocation) {
@@ -39,8 +72,10 @@ document.addEventListener('DOMContentLoaded', () => {
                 const lon = position.coords.longitude.toFixed(5);
                 lastCoords = { lat, lon };
                 geoCoords.textContent = `Lat: ${lat} | Long: ${lon}`;
-                geoStatus.textContent = "Localização obtida com sucesso!";
-                addHistory("Localização autorizada e obtida.");
+                geoStatus.textContent = "Localização obtida em tempo real!";
+                
+                updateMap(position.coords.latitude, position.coords.longitude);
+                addHistory("Localização e mapa atualizados.");
                 updateSOSMessage();
             },
             (error) => {
@@ -59,12 +94,23 @@ document.addEventListener('DOMContentLoaded', () => {
     const timerCountdown = document.getElementById('timer-countdown');
     const btnArrive = document.getElementById('btn-arrive');
     const btnCancelJourney = document.getElementById('btn-cancel-journey');
+    const btnSafe = document.getElementById('btn-safe');
     
     let journeyTimer = null;
     let timeLeft = 0;
 
     btnStartJourneyTab.addEventListener('click', () => {
         document.querySelector('[data-target="tab-journey"]').click();
+    });
+
+    btnSafe.addEventListener('click', () => {
+        if (journeyTimer) {
+            clearInterval(journeyTimer);
+            journeyActiveCard.classList.add('hidden-card');
+        }
+        updateStatus('paused', 'Proteção pausada');
+        addHistory("Confirmação manual de segurança emitida.");
+        alert("Sinal de segurança emitido. Estado atualizado.");
     });
 
     btnBeginJourney.addEventListener('click', () => {

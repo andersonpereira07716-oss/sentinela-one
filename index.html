@@ -4,6 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>SENTINELA ONE — Sua segurança em movimento</title>
+    <!-- Leaflet CSS -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <link rel="stylesheet" href="style.css">
     <link rel="manifest" href="manifest.json">
     <meta name="theme-color" content="#0B132B">
@@ -31,17 +33,17 @@
 
         <!-- NAVEGAÇÃO POR ABAS -->
         <nav class="nav-tabs">
-            <button class="tab-btn" data-target="tab-home">Início</button>
+            <button class="tab-btn active" data-target="tab-home">Início</button>
             <button class="tab-btn" data-target="tab-journey">Jornada</button>
             <button class="tab-btn" data-target="tab-contacts">Contatos</button>
-            <button class="tab-btn active" data-target="tab-help">Ajuda</button>
+            <button class="tab-btn" data-target="tab-help">Ajuda</button>
             <button class="tab-btn" data-target="tab-history">Histórico</button>
         </nav>
 
         <!-- CONTEÚDO DAS ABAS -->
         <main class="main-content">
             <!-- ABA INÍCIO -->
-            <section id="tab-home" class="tab-pane">
+            <section id="tab-home" class="tab-pane active">
                 <div class="card hero-card">
                     <h2>Central de Monitoramento Pessoal</h2>
                     <p>Gerencie sua segurança em deslocamentos e mantenha seus dados protegidos localmente.</p>
@@ -53,8 +55,14 @@
                 </div>
 
                 <div class="card">
-                    <h3>Localização Atual</h3>
-                    <p id="geo-status" class="text-muted">Permissão de GPS não solicitada.</p>
+                    <h3>Mapa de Localização</h3>
+                    <p id="geo-status" class="text-muted">Clique abaixo para ativar o mapa em tempo real.</p>
+                    
+                    <!-- CONTAINER DO MAPA INTERATIVO -->
+                    <div id="map-container" class="map-box">
+                        <p class="map-placeholder">O mapa aparecerá após a confirmação do GPS.</p>
+                    </div>
+
                     <div id="geo-coords" class="coords-box">Lat: -- | Long: --</div>
                     <button id="btn-get-location" class="btn btn-outline">Atualizar Localização</button>
                 </div>
@@ -116,7 +124,7 @@
             </section>
 
             <!-- ABA AJUDA -->
-            <section id="tab-help" class="tab-pane active">
+            <section id="tab-help" class="tab-pane">
                 <div class="card red-border">
                     <h2>Central de Emergência</h2>
                     <p>Em caso de perigo imediato, utilize os serviços oficiais abaixo:</p>
@@ -154,6 +162,8 @@
         </main>
     </div>
 
+    <!-- Leaflet JS -->
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <script src="app.js"></script>
     <script>
         if ('serviceWorker' in navigator) {
