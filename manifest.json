@@ -1,15 +1,20 @@
 {
   "name": "SENTINELA ONE",
-  "short_name": "Sentinela",
+  "short_name": "SentinelaOne",
   "start_url": "/",
   "display": "standalone",
   "background_color": "#0B132B",
   "theme_color": "#0B132B",
   "icons": [
     {
-      "src": "https://raw.githubusercontent.com/lucide-icons/lucide/main/icons/shield.svg",
-      "sizes": "192x192 512x512",
-      "type": "image/svg+xml"
+      "src": "https://img.icons8.com/fluency/96/shield.png",
+      "sizes": "96x96",
+      "type": "image/png"
+    },
+    {
+      "src": "https://img.icons8.com/fluency/512/shield.png",
+      "sizes": "512x512",
+      "type": "image/png"
     }
   ]
 }

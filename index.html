@@ -1,6 +1,8 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#0B132B">
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>SENTINELA ONE - Sua segurança em movimento</title>
@@ -178,5 +180,10 @@
 
         window.onload = initMap;
     </script>
+<script>
+    if ("serviceWorker" in navigator) {
+        navigator.serviceWorker.register("sw.js").then(() => console.log("Service Worker registado com sucesso."));
+    }
+</script>
 </body>
 </html>
