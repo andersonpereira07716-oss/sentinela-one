@@ -33,6 +33,7 @@
         .btn-amber { background: var(--accent-amber); color: #000; }
         .btn-red { background: var(--accent-red); color: #FFF; }
         .btn-purple { background: #7209B7; color: #FFF; }
+        .btn-whatsapp { background: #25D366; color: #FFF; display: inline-block; padding: 8px 12px; border-radius: 6px; text-decoration: none; font-size: 0.85rem; font-weight: bold; margin-top: 6px; }
         .input-field { width: 100%; padding: 12px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.1); background: #0B132B; color: #FFF; margin-top: 8px; margin-bottom: 12px; }
         #auth-screen, #app-screen { display: none; }
         #auth-screen.active, #app-screen.active { display: block; }
@@ -88,7 +89,7 @@
         <div id="tab-inicio" class="tab-content active">
             <div class="card">
                 <h3>Central de Monitoramento Pessoal</h3>
-                <p style="color: var(--text-secondary); font-size: 0.9rem; margin-top: 5px;">Gerencie sua segurança em deslocamentos e mantenha seus dados protegidos.</p>
+                <p style="color: var(--text-secondary); font-size: 0.9rem; margin-top: 5px;">Gerencie sua segurança em deslocamentos.</p>
                 <button class="btn btn-cyan" onclick="toggleProtecao()">Iniciar / Alternar Jornada</button>
                 <button class="btn btn-amber" onclick="testarPanicBiometrico()">⚡ Simular Teste de Pulsação (SOS)</button>
                 <button class="btn btn-purple" onclick="alert('Status: Você está seguro!')">Estou Seguro</button>
@@ -103,33 +104,30 @@
             </div>
         </div>
 
-        <!-- ABA: JORNADA (COM CRONÔMETRO RECURSIVO CORRIGIDO) -->
+        <!-- ABA: JORNADA -->
         <div id="tab-jornada" class="tab-content">
             <div class="card">
                 <h3>Jornada Protegida</h3>
-                <p style="color: var(--text-secondary); font-size: 0.85rem; margin-top: 5px;">Informe para onde vai e quanto tempo levará.</p>
                 <label style="font-size: 0.85rem; color: var(--text-secondary);">Destino / Local:</label>
                 <input type="text" id="jornada-destino" class="input-field" placeholder="Ex: Casa, Trabalho...">
                 <label style="font-size: 0.85rem; color: var(--text-secondary);">Tempo Estimado (minutos):</label>
                 <input type="number" id="jornada-tempo" class="input-field" value="30">
-                
                 <button class="btn btn-cyan" onclick="ativarJornada()">Ativar Jornada Protegida</button>
 
-                <!-- CRONÔMETRO VISUAL -->
                 <div id="cronometro-box" style="display:none; margin-top:15px; background:#0B132B; padding:15px; border-radius:8px; border: 1px solid var(--accent-cyan); text-align:center;">
-                    <p style="font-size:0.85rem; color:var(--text-secondary);">Tempo Restante para Chegada:</p>
+                    <p style="font-size:0.85rem; color:var(--text-secondary);">Tempo Restante:</p>
                     <h2 id="contador-tempo" style="color:var(--accent-cyan); font-size:1.8rem; margin: 8px 0;">--:--</h2>
                     <button class="btn btn-red" onclick="cancelarJornada()">Cheguei Bem / Cancelar</button>
                 </div>
             </div>
         </div>
 
-        <!-- ABA: CONTATOS -->
+        <!-- ABA: CONTATOS (COM BOTÃO WHATSAPP DIRETO) -->
         <div id="tab-contatos" class="tab-content">
             <div class="card">
                 <h3>Contatos de Confiança</h3>
                 <input type="text" id="contact-name" class="input-field" placeholder="Nome do contato">
-                <input type="tel" id="contact-phone" class="input-field" placeholder="Telefone / WhatsApp">
+                <input type="tel" id="contact-phone" class="input-field" placeholder="WhatsApp (ex: 5583999999999)">
                 <button class="btn btn-cyan" onclick="adicionarContato()">Adicionar Contato</button>
             </div>
             <div class="card">
@@ -149,7 +147,7 @@
             <div class="card">
                 <h3>Mensagem Rápida de Socorro</h3>
                 <div style="background: #0B132B; padding: 12px; border-radius: 8px; font-size: 0.8rem; color: var(--text-secondary);" id="socorro-text">
-                    ESTOU EM SITUAÇÃO DE RISCO! Preciso de ajuda urgente. Minha localização: https://maps.google.com/?q=-7.02358,-37.26164
+                    ESTOU EM SITUAÇÃO DE RISCO! Preciso de ajuda urgente. Minha última localização: https://maps.google.com/?q=-7.02358,-37.26164
                 </div>
                 <button class="btn btn-cyan" style="margin-top: 10px;" onclick="copiarMensagemSocorro()">Copiar Mensagem de Socorro</button>
             </div>
@@ -172,6 +170,7 @@
     <script src="js/cardio-monitor.js"></script>
     <script>
         let map, marker, protecaoAtiva = false, timerInterval = null;
+        let meusContatos = [];
 
         function verificarSessao() {
             const token = localStorage.getItem('sentinela_token');
@@ -237,7 +236,7 @@
             protecaoAtiva = !protecaoAtiva;
             const badge = document.getElementById('statusBadge');
             const text = document.getElementById('statusText');
-            if (protecaoAtiva) {
+            if (protecao_ativa = protecaoAtiva) {
                 badge.classList.add('status-active');
                 text.innerText = 'Proteção Ativa';
             } else {
@@ -246,20 +245,17 @@
             }
         }
 
-        /* LÓGICA DO CRONÔMETRO DE JORNADA */
         function ativarJornada() {
             const destino = document.getElementById('jornada-destino').value || 'Destino';
             const minutos = parseInt(document.getElementById('jornada-tempo').value) || 30;
-            
             let totalSeconds = minutos * 60;
             document.getElementById('cronometro-box').style.display = 'block';
-            
             if(timerInterval) clearInterval(timerInterval);
 
             timerInterval = setInterval(() => {
                 if (totalSeconds <= 0) {
                     clearInterval(timerInterval);
-                    alert("TEMPO ESGOTADO! Alarme de pânico acionado por falta de confirmação!");
+                    alert("TEMPO ESGOTADO! Alarme de pânico acionado!");
                     return;
                 }
                 totalSeconds--;
@@ -267,14 +263,13 @@
                 let s = totalSeconds % 60;
                 document.getElementById('contador-tempo').innerText = `${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
             }, 1000);
-
-            alert(`Jornada para "${destino}" ativada! O cronômetro começou.`);
+            alert(`Jornada para "${destino}" ativada!`);
         }
 
         function cancelarJornada() {
             if(timerInterval) clearInterval(timerInterval);
             document.getElementById('cronometro-box').style.display = 'none';
-            alert("Jornada concluída com sucesso! Chegou bem.");
+            alert("Jornada concluída com sucesso!");
         }
 
         function testarPanicBiometrico() {
@@ -305,11 +300,32 @@
 
         function adicionarContato() {
             const name = document.getElementById('contact-name').value;
-            const phone = document.getElementById('contact-phone').value;
+            let phone = document.getElementById('contact-phone').value.replace(/\D/g, ''); // Remove caracteres não numéricos
+            
             if(name && phone) {
-                document.getElementById('contacts-list').innerHTML = `<div style="background:#0B132B; padding:10px; border-radius:6px; margin-top:5px; color:#FFF;"><strong>${name}</strong> (${phone})</div>`;
-                alert('Contato adicionado!');
+                meusContatos.push({ name, phone });
+                renderizarContatos();
+                document.getElementById('contact-name').value = '';
+                document.getElementById('contact-phone').value = '';
+                alert('Contato adicionado com sucesso!');
+            } else {
+                alert('Preencha o nome e o número de WhatsApp corretamente.');
             }
+        }
+
+        function renderizarContatos() {
+            const container = document.getElementById('contacts-list');
+            if (meusContatos.length === 0) {
+                container.innerHTML = 'Nenhum contato cadastrado.';
+                return;
+            }
+            container.innerHTML = meusContatos.map(c => `
+                <div style="background:#0B132B; padding:12px; border-radius:8px; margin-top:8px; border: 1px solid rgba(0,240,255,0.2);">
+                    <strong style="color:#FFF; display:block; font-size:0.95rem;">${c.name}</strong>
+                    <span style="color:var(--text-secondary); font-size:0.8rem;">${c.phone}</span><br>
+                    <a href="https://wa.me/${c.phone}?text=OLÁ%20PRECISO%20DE%20AJUDA%20URGENTE!" target="_blank" class="btn-whatsapp">💬 Chamar no WhatsApp</a>
+                </div>
+            `).join('');
         }
 
         if ("serviceWorker" in navigator) {
