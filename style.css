@@ -186,7 +186,7 @@ body {
     font-weight: 600;
 }
 
-/* MAPA LEAFLET COM MODO ESCURO AUTOMÁTICO */
+/* MAPA LEAFLET COM MODO ESCURO */
 #map {
     width: 100%;
     height: 220px;
@@ -198,7 +198,6 @@ body {
     z-index: 10;
 }
 
-/* Aplicação de filtros para criar o Dark Mode elegante nos azulejos do mapa */
 .leaflet-layer,
 .leaflet-control-zoom,
 .leaflet-control-attribution {
@@ -209,7 +208,7 @@ body {
     background-color: #0B132B !important;
 }
 
-/* BOTÕES E FORMULÁRIOS */
+/* BOTÕES DE EMERGÊNCIA */
 .emergency-buttons {
     display: flex;
     flex-direction: column;
@@ -228,8 +227,26 @@ body {
     border-radius: 10px;
     text-decoration: none;
     width: 100%;
+    color: #FFFFFF !important;
+    border: none;
+    cursor: pointer;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.3);
 }
 
+.btn-call.btn-danger {
+    background-color: var(--accent-red);
+}
+
+.btn-call.btn-secondary {
+    background-color: #3A0CA3;
+}
+
+.btn-call.btn-outline-danger {
+    background-color: #D90429;
+    border: 1px solid #EF233C;
+}
+
+/* OUTROS BOTÕES */
 .quick-actions {
     display: flex;
     flex-direction: column;
