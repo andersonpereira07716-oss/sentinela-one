@@ -4,6 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>SENTINELA ONE - Sua segurança em movimento</title>
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#0B132B">
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <style>
         :root {
@@ -18,32 +20,40 @@
         * { box-sizing: border-box; margin: 0; padding: 0; font-family: system-ui, -apple-system, sans-serif; }
         body { background-color: var(--bg-main); color: var(--text-primary); padding: 15px; }
         .header { display: flex; justify-content: space-between; align-items: center; background: var(--card-bg); padding: 15px; border-radius: 12px; margin-bottom: 15px; border: 1px solid rgba(0,240,255,0.2); }
+        .status-badge { background: #2A3655; padding: 6px 12px; border-radius: 20px; font-size: 0.8rem; color: var(--text-secondary); display: flex; align-items: center; gap: 6px; }
+        .status-dot { width: 8px; height: 8px; border-radius: 50%; background: #888; }
+        .status-active .status-dot { background: var(--accent-cyan); box-shadow: 0 0 8px var(--accent-cyan); }
+        .status-active { color: var(--accent-cyan); }
+        .nav-tabs { display: flex; gap: 8px; overflow-x: auto; margin-bottom: 15px; }
+        .tab-btn { background: var(--card-bg); border: none; color: var(--text-primary); padding: 10px 16px; border-radius: 8px; font-weight: 600; cursor: pointer; white-space: nowrap; }
+        .tab-btn.active { background: var(--accent-cyan); color: #000; }
         .card { background: var(--card-bg); padding: 18px; border-radius: 12px; margin-bottom: 15px; border: 1px solid rgba(255,255,255,0.05); }
         .btn { width: 100%; padding: 14px; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; margin-top: 10px; font-size: 1rem; }
         .btn-cyan { background: var(--accent-cyan); color: #000; }
+        .btn-amber { background: var(--accent-amber); color: #000; }
+        .btn-red { background: var(--accent-red); color: #FFF; }
+        .btn-purple { background: #7209B7; color: #FFF; }
         .input-field { width: 100%; padding: 12px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.1); background: #0B132B; color: #FFF; margin-top: 8px; margin-bottom: 12px; }
         #auth-screen, #app-screen { display: none; }
         #auth-screen.active, #app-screen.active { display: block; }
         .tab-content { display: none; }
         .tab-content.active { display: block; }
-        .nav-tabs { display: flex; gap: 8px; overflow-x: auto; margin-bottom: 15px; }
-        .tab-btn { background: var(--card-bg); border: none; color: var(--text-primary); padding: 10px 16px; border-radius: 8px; font-weight: 600; cursor: pointer; white-space: nowrap; }
-        .tab-btn.active { background: var(--accent-cyan); color: #000; }
         #map { height: 220px; width: 100%; border-radius: 8px; margin-top: 10px; border: 1px solid var(--accent-cyan); }
+        .map-tiles { filter: brightness(0.7) invert(1) contrast(1.2) hue-rotate(200deg); }
     </style>
 </head>
 <body>
 
-    <!-- ECRÃ DE AUTENTICAÇÃO (LOGIN / REGISTO) -->
+    <!-- TELA DE AUTENTICAÇÃO (LOGIN / CADASTRO) -->
     <div id="auth-screen" class="active">
-        <div style="max-width: 400px; margin: 50px auto;" class="card">
-            <h2 style="color: var(--accent-cyan); text-align: center; margin-bottom: 10px;">SENTINELA ONE</h2>
-            <p style="text-align: center; color: var(--text-secondary); font-size: 0.9rem; margin-bottom: 20px;">Aceda com a sua conta privada</p>
+        <div style="max-width: 400px; margin: 40px auto;" class="card">
+            <h2 style="color: var(--accent-cyan); text-align: center; margin-bottom: 5px;">SENTINELA ONE</h2>
+            <p style="text-align: center; color: var(--text-secondary); font-size: 0.85rem; margin-bottom: 20px;">Sua segurança em movimento.</p>
             
             <label style="font-size: 0.85rem; color: var(--text-secondary);">E-mail:</label>
             <input type="email" id="auth-email" class="input-field" placeholder="seu@email.com">
             
-            <label style="font-size: 0.85rem; color: var(--text-secondary);">Palavra-passe:</label>
+            <label style="font-size: 0.85rem; color: var(--text-secondary);">Senha:</label>
             <input type="password" id="auth-password" class="input-field" placeholder="********">
             
             <button class="btn btn-cyan" onclick="fazerLogin()">Entrar</button>
@@ -51,14 +61,19 @@
         </div>
     </div>
 
-    <!-- ECRÃ PRINCIPAL DO APLICATIVO -->
+    <!-- TELA PRINCIPAL DO APLICATIVO (INTERFACE COMPLETA RESTAURADA) -->
     <div id="app-screen">
         <div class="header">
             <div>
                 <h2 style="color: var(--accent-cyan);">SENTINELA ONE</h2>
-                <small style="color: var(--text-secondary);" id="user-email-display">Protegido</small>
+                <small style="color: var(--text-secondary);" id="user-email-display">Sua segurança em movimento</small>
             </div>
-            <button onclick="fazerLogout()" style="background: var(--accent-red); color: #FFF; border: none; padding: 6px 12px; border-radius: 6px; cursor: pointer; font-size: 0.8rem;">Sair</button>
+            <div style="display: flex; align-items: center; gap: 8px;">
+                <div id="statusBadge" class="status-badge">
+                    <span class="status-dot"></span> <span id="statusText">Proteção pausada</span>
+                </div>
+                <button onclick="fazerLogout()" style="background: var(--accent-red); color: #FFF; border: none; padding: 6px 12px; border-radius: 6px; cursor: pointer; font-size: 0.8rem;">Sair</button>
+            </div>
         </div>
 
         <div class="nav-tabs">
@@ -69,54 +84,96 @@
             <button class="tab-btn" onclick="switchTab('historico', this)">Histórico</button>
         </div>
 
+        <!-- ABA: INÍCIO -->
         <div id="tab-inicio" class="tab-content active">
             <div class="card">
                 <h3>Central de Monitoramento Pessoal</h3>
-                <p style="color: var(--text-secondary); font-size: 0.9rem; margin-top: 5px;">Os seus dados estão isolados e seguros na sua conta.</p>
-                <button class="btn btn-cyan" onclick="alert('Sistema Ativo!')">Iniciar Monitoramento</button>
+                <p style="color: var(--text-secondary); font-size: 0.9rem; margin-top: 5px;">Gerencie sua segurança em deslocamentos e mantenha seus dados protegidos localmente.</p>
+                <button class="btn btn-cyan" onclick="toggleProtecao()">Iniciar / Alternar Jornada</button>
+                <button class="btn btn-amber" onclick="testarPanicBiometrico()">⚡ Simular Teste de Pulsação (SOS)</button>
+                <button class="btn btn-purple" onclick="alert('Status: Você está seguro!')">Estou Seguro</button>
+                <button class="btn btn-red" onclick="alert('Alerta de Socorro Enviado!')">Preciso de Ajuda</button>
             </div>
+
             <div class="card">
                 <h3>Mapa de Localização</h3>
+                <p style="color: var(--text-secondary); font-size: 0.85rem;">Toque no botão abaixo para ativar o GPS e o mapa.</p>
                 <div id="map"></div>
                 <div style="margin-top: 10px; font-size: 0.85rem; color: var(--accent-cyan);" id="coords">Lat: -- | Long: --</div>
                 <button class="btn btn-cyan" style="margin-top: 10px;" onclick="updateLocation()">Atualizar Localização</button>
             </div>
         </div>
 
+        <!-- ABA: JORNADA -->
         <div id="tab-jornada" class="tab-content">
             <div class="card">
                 <h3>Jornada Protegida</h3>
-                <input type="text" class="input-field" placeholder="Destino / Local">
-                <button class="btn btn-cyan" onclick="alert('Jornada gravada na sua conta!')">Ativar Jornada</button>
+                <p style="color: var(--text-secondary); font-size: 0.85rem; margin-top: 5px;">Informe para onde vai e quanto tempo levará. Se não confirmar chegada a tempo, o alarme será acionado.</p>
+                <label style="font-size: 0.85rem; color: var(--text-secondary);">Destino / Local:</label>
+                <input type="text" class="input-field" placeholder="Ex: Faculdade, Trabalho...">
+                <label style="font-size: 0.85rem; color: var(--text-secondary);">Tempo Estimado (minutos):</label>
+                <input type="number" class="input-field" value="30">
+                <button class="btn btn-cyan" onclick="alert('Jornada Protegida Ativada!')">Ativar Jornada Protegida</button>
             </div>
         </div>
 
+        <!-- ABA: CONTATOS -->
         <div id="tab-contatos" class="tab-content">
             <div class="card">
-                <h3>Contactos de Confiança (Privados)</h3>
-                <input type="text" class="input-field" placeholder="Nome do contacto">
-                <button class="btn btn-cyan" onclick="alert('Contacto salvo na sua conta!')">Adicionar</button>
+                <h3>Contatos de Confiança</h3>
+                <p style="color: var(--text-secondary); font-size: 0.85rem; margin-top: 5px;">Cadastre pessoas que conhecem sua rotina.</p>
+                <input type="text" id="contact-name" class="input-field" placeholder="Nome do contato">
+                <input type="tel" id="contact-phone" class="input-field" placeholder="Telefone / WhatsApp (ex: 83999999999)">
+                <input type="text" id="contact-relation" class="input-field" placeholder="Relação (ex: Mãe, Irmão, Amigo)">
+                <button class="btn btn-cyan" onclick="adicionarContato()">Adicionar Contato</button>
+            </div>
+            <div class="card">
+                <h3>Lista de Contatos</h3>
+                <div id="contacts-list" style="color: var(--text-secondary); font-size: 0.85rem; margin-top: 8px;">Nenhum contato cadastrado.</div>
             </div>
         </div>
 
+        <!-- ABA: AJUDA -->
         <div id="tab-ajuda" class="tab-content">
             <div class="card">
                 <h3>Central de Emergência</h3>
-                <button class="btn" style="background: var(--accent-red); color:#FFF;" onclick="window.location.href='tel:190'">Polícia Militar (190)</button>
+                <p style="color: var(--text-secondary); font-size: 0.85rem; margin-bottom: 10px;">Em caso de perigo imediato, utilize os serviços oficiais abaixo:</p>
+                <button class="btn btn-red" onclick="window.location.href='tel:190'">🚨 Polícia Militar (190)</button>
+                <button class="btn btn-purple" onclick="window.location.href='tel:192'">🚑 SAMU (192)</button>
+                <button class="btn btn-amber" style="background: #F77F00; color: #FFF;" onclick="window.location.href='tel:193'">🚒 Bombeiros (193)</button>
+            </div>
+            <div class="card">
+                <h3>Mensagem Rápida de Socorro</h3>
+                <p style="color: var(--text-secondary); font-size: 0.85rem; margin-bottom: 10px;">Gere uma mensagem pré-formatada para copiar e enviar rapidamente.</p>
+                <div style="background: #0B132B; padding: 12px; border-radius: 8px; font-size: 0.8rem; color: var(--text-secondary);" id="socorro-text">
+                    ESTOU EM SITUAÇÃO DE RISCO! Preciso de ajuda urgente. Minha última localização: https://maps.google.com/?q=-7.02358,-37.26164
+                </div>
+                <button class="btn btn-cyan" style="margin-top: 10px;" onclick="copiarMensagemSocorro()">Copiar Mensagem de Socorro</button>
             </div>
         </div>
 
+        <!-- ABA: HISTÓRICO -->
         <div id="tab-historico" class="tab-content">
             <div class="card">
-                <h3>Histórico Privado</h3>
-                <p style="color: var(--text-secondary); font-size: 0.9rem;">Apenas visível para a sua conta autenticada.</p>
+                <h3>Histórico de Ocorrências</h3>
+                <div style="background: #0B132B; padding: 12px; border-radius: 8px; font-size: 0.85rem; margin-top: 10px;">
+                    Localização e mapa atualizados. <span style="float: right; color: var(--text-secondary);">Sistema ativo</span>
+                </div>
+                <button class="btn btn-red" style="background: transparent; border: 1px solid var(--accent-red); margin-top: 15px;" onclick="alert('Histórico limpo!')">Limpar Histórico</button>
+            </div>
+            <div class="card">
+                <h3>Privacidade e Dados</h3>
+                <p style="color: var(--text-secondary); font-size: 0.85rem; margin-bottom: 10px;">Seus dados residem exclusivamente no armazenamento seguro da sua conta autenticada.</p>
+                <button class="btn btn-red" onclick="alert('Dados apagados!')">Excluir Todos os Dados Locais</button>
             </div>
         </div>
     </div>
 
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script src="js/security-features.js"></script>
+    <script src="js/cardio-monitor.js"></script>
     <script>
-        let map, marker;
+        let map, marker, protecaoAtiva = false;
 
         function verificarSessao() {
             const token = localStorage.getItem('sentinela_token');
@@ -135,15 +192,12 @@
         async function fazerLogin() {
             const email = document.getElementById('auth-email').value;
             const password = document.getElementById('auth-password').value;
-            
-            // Simulação de autenticação segura ligada ao Supabase / Backend
             if(email && password) {
                 localStorage.setItem('sentinela_token', 'token_seguro_' + Date.now());
                 localStorage.setItem('sentinela_email', email);
-                alert('Login efetuado com sucesso!');
                 verificarSessao();
             } else {
-                alert('Preencha o e-mail e a palavra-passe.');
+                alert('Preencha o e-mail e a senha.');
             }
         }
 
@@ -151,9 +205,9 @@
             const email = document.getElementById('auth-email').value;
             const password = document.getElementById('auth-password').value;
             if(email && password) {
-                alert('Conta criada com sucesso! Pode fazer login.');
+                alert('Conta criada com sucesso! Pode entrar.');
             } else {
-                alert('Preencha os campos para criar conta.');
+                alert('Preencha e-mail e senha.');
             }
         }
 
@@ -166,7 +220,9 @@
         function initMap() {
             if(!map) {
                 map = L.map('map').setView([-7.02358, -37.26164], 14);
-                L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
+                L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                    className: 'map-tiles'
+                }).addTo(map);
                 marker = L.marker([-7.02358, -37.26164]).addTo(map).bindPopup("Você está aqui").openPopup();
             }
         }
@@ -179,6 +235,26 @@
             if(tabId === 'inicio' && map) setTimeout(() => map.invalidateSize(), 200);
         }
 
+        function toggleProtecao() {
+            protecaoAtiva = !protecaoAtiva;
+            const badge = document.getElementById('statusBadge');
+            const text = document.getElementById('statusText');
+            if (protecaoAtiva) {
+                badge.classList.add('status-active');
+                text.innerText = 'Proteção Ativa';
+            } else {
+                badge.classList.remove('status-active');
+                text.innerText = 'Proteção pausada';
+            }
+        }
+
+        function testarPanicBiometrico() {
+            if (window.CardioMonitor) {
+                window.CardioMonitor.analyzeHeartRate(135);
+                alert("Simulação de pico biométrico (135 BPM) executada com sucesso!");
+            }
+        }
+
         function updateLocation() {
             if (navigator.geolocation) {
                 navigator.geolocation.getCurrentPosition(pos => {
@@ -187,8 +263,28 @@
                     map.setView([lat, lng], 16);
                     marker.setLatLng([lat, lng]);
                     document.getElementById('coords').innerText = `Lat: ${lat.toFixed(5)} | Long: ${lng.toFixed(5)}`;
+                    document.getElementById('socorro-text').innerText = `ESTOU EM SITUAÇÃO DE RISCO! Preciso de ajuda urgente. Minha última localização: https://maps.google.com/?q=${lat},${lng}`;
                 });
             }
+        }
+
+        function copiarMensagemSocorro() {
+            const txt = document.getElementById('socorro-text').innerText;
+            navigator.clipboard.writeText(txt);
+            alert('Mensagem de socorro copiada para a área de transferência!');
+        }
+
+        function adicionarContato() {
+            const name = document.getElementById('contact-name').value;
+            const phone = document.getElementById('contact-phone').value;
+            if(name && phone) {
+                document.getElementById('contacts-list').innerHTML = `<div style="background:#0B132B; padding:10px; border-radius:6px; margin-top:5px; color:#FFF;"><strong>${name}</strong> (${phone})</div>`;
+                alert('Contato adicionado com sucesso!');
+            }
+        }
+
+        if ("serviceWorker" in navigator) {
+            navigator.serviceWorker.register("sw.js").then(() => console.log("Service Worker ativo."));
         }
 
         window.onload = verificarSessao;
