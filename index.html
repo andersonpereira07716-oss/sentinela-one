@@ -92,8 +92,6 @@
                 <p style="color: var(--text-secondary); font-size: 0.9rem; margin-top: 5px;">Gerencie sua segurança em deslocamentos.</p>
                 <button class="btn btn-cyan" onclick="toggleProtecao()">Iniciar / Alternar Jornada</button>
                 <button class="btn btn-amber" onclick="testarPanicBiometrico()">⚡ Simular Teste de Pulsação (SOS)</button>
-                <button class="btn btn-purple" onclick="alert('Status: Você está seguro!')">Estou Seguro</button>
-                <button class="btn btn-red" onclick="alert('Alerta de Socorro Enviado!')">Preciso de Ajuda</button>
             </div>
 
             <div class="card">
@@ -122,7 +120,7 @@
             </div>
         </div>
 
-        <!-- ABA: CONTATOS (COM BOTÃO WHATSAPP DIRETO) -->
+        <!-- ABA: CONTATOS -->
         <div id="tab-contatos" class="tab-content">
             <div class="card">
                 <h3>Contatos de Confiança</h3>
@@ -160,7 +158,6 @@
                 <div style="background: #0B132B; padding: 12px; border-radius: 8px; font-size: 0.85rem; margin-top: 10px;">
                     Sistema ativo e protegido na conta.
                 </div>
-                <button class="btn btn-red" style="background: transparent; border: 1px solid var(--accent-red); margin-top: 15px;" onclick="alert('Histórico limpo!')">Limpar Histórico</button>
             </div>
         </div>
     </div>
@@ -193,8 +190,6 @@
                 localStorage.setItem('sentinela_token', 'token_' + Date.now());
                 localStorage.setItem('sentinela_email', email);
                 verificarSessao();
-            } else {
-                alert('Preencha o e-mail e a senha.');
             }
         }
 
@@ -202,9 +197,9 @@
             const email = document.getElementById('auth-email').value;
             const password = document.getElementById('auth-password').value;
             if(email && password) {
-                alert('Conta criada com sucesso! Faça login.');
-            } else {
-                alert('Preencha e-mail e senha.');
+                localStorage.setItem('sentinela_token', 'token_' + Date.now());
+                localStorage.setItem('sentinela_email', email);
+                verificarSessao();
             }
         }
 
@@ -236,7 +231,7 @@
             protecaoAtiva = !protecaoAtiva;
             const badge = document.getElementById('statusBadge');
             const text = document.getElementById('statusText');
-            if (protecao_ativa = protecaoAtiva) {
+            if (protecaoAtiva) {
                 badge.classList.add('status-active');
                 text.innerText = 'Proteção Ativa';
             } else {
@@ -246,7 +241,6 @@
         }
 
         function ativarJornada() {
-            const destino = document.getElementById('jornada-destino').value || 'Destino';
             const minutos = parseInt(document.getElementById('jornada-tempo').value) || 30;
             let totalSeconds = minutos * 60;
             document.getElementById('cronometro-box').style.display = 'block';
@@ -255,7 +249,6 @@
             timerInterval = setInterval(() => {
                 if (totalSeconds <= 0) {
                     clearInterval(timerInterval);
-                    alert("TEMPO ESGOTADO! Alarme de pânico acionado!");
                     return;
                 }
                 totalSeconds--;
@@ -263,19 +256,16 @@
                 let s = totalSeconds % 60;
                 document.getElementById('contador-tempo').innerText = `${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
             }, 1000);
-            alert(`Jornada para "${destino}" ativada!`);
         }
 
         function cancelarJornada() {
             if(timerInterval) clearInterval(timerInterval);
             document.getElementById('cronometro-box').style.display = 'none';
-            alert("Jornada concluída com sucesso!");
         }
 
         function testarPanicBiometrico() {
             if (window.CardioMonitor) {
                 window.CardioMonitor.analyzeHeartRate(135);
-                alert("Simulação de pico biométrico (135 BPM) executada!");
             }
         }
 
@@ -295,21 +285,17 @@
         function copiarMensagemSocorro() {
             const txt = document.getElementById('socorro-text').innerText;
             navigator.clipboard.writeText(txt);
-            alert('Mensagem de socorro copiada!');
         }
 
         function adicionarContato() {
             const name = document.getElementById('contact-name').value;
-            let phone = document.getElementById('contact-phone').value.replace(/\D/g, ''); // Remove caracteres não numéricos
+            let phone = document.getElementById('contact-phone').value.replace(/\D/g, '');
             
             if(name && phone) {
                 meusContatos.push({ name, phone });
                 renderizarContatos();
                 document.getElementById('contact-name').value = '';
                 document.getElementById('contact-phone').value = '';
-                alert('Contato adicionado com sucesso!');
-            } else {
-                alert('Preencha o nome e o número de WhatsApp corretamente.');
             }
         }
 
