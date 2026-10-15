@@ -1,7 +1,7 @@
 document.addEventListener('DOMContentLoaded', () => {
     const API_URL = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1' 
         ? 'http://localhost:3000/api' 
-        : 'https://televisions-junior-surge-those.trycloudflare.com/api';
+        : 'https://sentinela-api-m3i5.onrender.com/api';
 
     // ABAS DE NAVEGAÇÃO
     const tabButtons = document.querySelectorAll('.tab-btn');
