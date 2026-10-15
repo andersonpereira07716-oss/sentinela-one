@@ -26,10 +26,13 @@
         .tab-btn { background: var(--card-bg); border: none; color: var(--text-primary); padding: 10px 16px; border-radius: 8px; font-weight: 600; cursor: pointer; white-space: nowrap; }
         .tab-btn.active { background: var(--accent-cyan); color: #000; }
         .card { background: var(--card-bg); padding: 18px; border-radius: 12px; margin-bottom: 15px; border: 1px solid rgba(255,255,255,0.05); }
+        .tab-content { display: none; }
+        .tab-content.active { display: block; }
         .btn { width: 100%; padding: 14px; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; margin-top: 10px; font-size: 1rem; }
         .btn-cyan { background: var(--accent-cyan); color: #000; }
         .btn-amber { background: var(--accent-amber); color: #000; }
         .btn-red { background: var(--accent-red); color: #FFF; }
+        .input-field { width: 100%; padding: 12px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.1); background: #0B132B; color: #FFF; margin-top: 8px; margin-bottom: 12px; }
         #map { height: 220px; width: 100%; border-radius: 8px; margin-top: 10px; border: 1px solid var(--accent-cyan); }
     </style>
 </head>
@@ -46,26 +49,72 @@
     </div>
 
     <div class="nav-tabs">
-        <button class="tab-btn active" onclick="switchTab('inicio')">Início</button>
-        <button class="tab-btn" onclick="switchTab('jornada')">Jornada</button>
-        <button class="tab-btn" onclick="switchTab('contatos')">Contatos</button>
-        <button class="tab-btn" onclick="switchTab('ajuda')">Ajuda</button>
-        <button class="tab-btn" onclick="switchTab('historico')">Histórico</button>
+        <button class="tab-btn active" onclick="switchTab('inicio', this)">Início</button>
+        <button class="tab-btn" onclick="switchTab('jornada', this)">Jornada</button>
+        <button class="tab-btn" onclick="switchTab('contatos', this)">Contatos</button>
+        <button class="tab-btn" onclick="switchTab('ajuda', this)">Ajuda</button>
+        <button class="tab-btn" onclick="switchTab('historico', this)">Histórico</button>
     </div>
 
-    <div id="tab-inicio" class="card">
-        <h3>Central de Monitoramento Pessoal</h3>
-        <p style="color: var(--text-secondary); font-size: 0.9rem; margin-top: 5px;">Gerencie sua segurança em deslocamentos.</p>
-        <button class="btn btn-cyan" onclick="toggleProtecao()">Iniciar / Alternar Jornada</button>
-        <button class="btn btn-amber" onclick="testarPanicBiometrico()">⚡ Simular Teste de Pulsação (SOS)</button>
-        <button class="btn btn-red" onclick="alert('Alerta de Socorro Enviado!')">Preciso de Ajuda</button>
+    <!-- AB: INÍCIO -->
+    <div id="tab-inicio" class="tab-content active">
+        <div class="card">
+            <h3>Central de Monitoramento Pessoal</h3>
+            <p style="color: var(--text-secondary); font-size: 0.9rem; margin-top: 5px;">Gerencie sua segurança em deslocamentos.</p>
+            <button class="btn btn-cyan" onclick="toggleProtecao()">Iniciar / Alternar Jornada</button>
+            <button class="btn btn-amber" onclick="testarPanicBiometrico()">⚡ Simular Teste de Pulsação (SOS)</button>
+            <button class="btn btn-red" onclick="alert('Alerta de Socorro Enviado!')">Preciso de Ajuda</button>
+        </div>
+
+        <div class="card">
+            <h3>Mapa de Localização</h3>
+            <div id="map"></div>
+            <div style="margin-top: 10px; font-size: 0.85rem; color: var(--accent-cyan);" id="coords">Lat: -- | Long: --</div>
+            <button class="btn btn-cyan" style="margin-top: 10px;" onclick="updateLocation()">Atualizar Localização</button>
+        </div>
     </div>
 
-    <div class="card">
-        <h3>Mapa de Localização</h3>
-        <div id="map"></div>
-        <div style="margin-top: 10px; font-size: 0.85rem; color: var(--accent-cyan);" id="coords">Lat: -- | Long: --</div>
-        <button class="btn btn-cyan" style="margin-top: 10px;" onclick="updateLocation()">Atualizar Localização</button>
+    <!-- ABA: JORNADA -->
+    <div id="tab-jornada" class="tab-content">
+        <div class="card">
+            <h3>Jornada Protegida</h3>
+            <p style="color: var(--text-secondary); font-size: 0.9rem; margin-top: 5px;">Informe para onde vai e o tempo estimado.</p>
+            <label style="font-size: 0.85rem; color: var(--text-secondary);">Destino / Local:</label>
+            <input type="text" class="input-field" placeholder="Ex: Faculdade, Trabalho...">
+            <label style="font-size: 0.85rem; color: var(--text-secondary);">Tempo Estimado (minutos):</label>
+            <input type="number" class="input-field" value="30">
+            <button class="btn btn-cyan" onclick="alert('Jornada Protegida Ativada!')">Ativar Jornada Protegida</button>
+        </div>
+    </div>
+
+    <!-- ABA: CONTATOS -->
+    <div id="tab-contatos" class="tab-content">
+        <div class="card">
+            <h3>Contatos de Confiança</h3>
+            <p style="color: var(--text-secondary); font-size: 0.9rem; margin-top: 5px;">Cadastre pessoas para alertas SOS.</p>
+            <input type="text" class="input-field" placeholder="Nome do contato">
+            <input type="tel" class="input-field" placeholder="Telefone / WhatsApp">
+            <button class="btn btn-cyan" onclick="alert('Contato adicionado com sucesso!')">Adicionar Contato</button>
+        </div>
+    </div>
+
+    <!-- ABA: AJUDA -->
+    <div id="tab-ajuda" class="tab-content">
+        <div class="card">
+            <h3>Central de Emergência</h3>
+            <button class="btn btn-red" onclick="window.location.href='tel:190'">Polícia Militar (190)</button>
+            <button class="btn btn-amber" style="background: #7209B7; color:#FFF;" onclick="window.location.href='tel:192'">SAMU (192)</button>
+            <button class="btn btn-red" style="background: #F77F00;" onclick="window.location.href='tel:193'">Bombeiros (193)</button>
+        </div>
+    </div>
+
+    <!-- ABA: HISTÓRICO -->
+    <div id="tab-historico" class="tab-content">
+        <div class="card">
+            <h3>Histórico de Ocorrências</h3>
+            <p style="color: var(--text-secondary); font-size: 0.9rem; margin-top: 5px;">Registo das últimas atividades de segurança.</p>
+            <div style="background: #0B132B; padding: 10px; border-radius: 6px; margin-top: 10px; font-size: 0.85rem;">Sistema iniciado e protegido na nuvem.</div>
+        </div>
     </div>
 
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
@@ -80,6 +129,19 @@
                 className: 'map-tiles'
             }).addTo(map);
             marker = L.marker([-7.02358, -37.26164]).addTo(map).bindPopup("Você está aqui").openPopup();
+        }
+
+        function switchTab(tabId, btnElement) {
+            document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+            document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+            
+            document.getElementById('tab-' + tabId).classList.add('active');
+            btnElement.classList.add('active');
+            
+            // Corrige redimensionamento do mapa se voltar para a aba início
+            if(tabId === 'inicio' && map) {
+                setTimeout(() => map.invalidateSize(), 200);
+            }
         }
 
         function toggleProtecao() {
@@ -112,11 +174,6 @@
                     document.getElementById('coords').innerText = `Lat: ${lat.toFixed(5)} | Long: ${lng.toFixed(5)}`;
                 });
             }
-        }
-
-        function switchTab(tab) {
-            document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
-            event.target.classList.add('active');
         }
 
         window.onload = initMap;
