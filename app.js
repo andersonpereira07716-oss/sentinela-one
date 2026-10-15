@@ -1,11 +1,9 @@
 document.addEventListener('DOMContentLoaded', () => {
-    // URL da API (Deteta se está local ou em produção)
     const API_URL = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1' 
-    ? 'http://localhost:3000/api' 
-    : 'https://televisions-junior-surge-those.trycloudflare.com/api';
+        ? 'http://localhost:3000/api' 
+        : 'https://televisions-junior-surge-those.trycloudflare.com/api';
 
-
-    // ABAS
+    // ABAS DE NAVEGAÇÃO
     const tabButtons = document.querySelectorAll('.tab-btn');
     const tabPanes = document.querySelectorAll('.tab-pane');
 
@@ -31,7 +29,7 @@ document.addEventListener('DOMContentLoaded', () => {
         statusText.textContent = text;
     }
 
-    // MAPA LEAFLET GLOBAL
+    // MAPA LEAFLET
     let map = null;
     let marker = null;
 
@@ -47,7 +45,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     initDefaultMap();
 
-    // GEOLOCALIZAÇÃO
+    // GEOLOCALIZAÇÃO GPS
     const geoStatus = document.getElementById('geo-status');
     const geoCoords = document.getElementById('geo-coords');
     const btnGetLocation = document.getElementById('btn-get-location');
@@ -136,7 +134,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 body: JSON.stringify({ destino, duracaoMinutos, usuario: "Anderson" })
             });
         } catch (err) {
-            console.log("Aviso: API offline, jornada mantida localmente.");
+            console.log("Aviso: API offline, jornada registrada localmente.");
         }
     });
 
@@ -173,10 +171,18 @@ document.addEventListener('DOMContentLoaded', () => {
         addHistory("Jornada cancelada pelo usuário.");
     });
 
-    // CONTATOS DE CONFIANÇA
+    // CONTATOS DE CONFIANÇA & DISPARO WHATSAPP
     const contactForm = document.getElementById('contact-form');
     const contactsList = document.getElementById('contacts-list');
     let contacts = JSON.parse(localStorage.getItem('sentinela_contacts')) || [];
+
+    function formatPhoneForWhatsApp(phone) {
+        let clean = phone.replace(/\D/g, '');
+        if (clean.length === 10 || clean.length === 11) {
+            clean = '55' + clean;
+        }
+        return clean;
+    }
 
     function renderContacts() {
         if (contacts.length === 0) {
@@ -185,18 +191,44 @@ document.addEventListener('DOMContentLoaded', () => {
         }
         contactsList.innerHTML = '';
         contacts.forEach((c, index) => {
+            const rawPhone = c.phone || c.telefone || '';
+            const cleanPhone = formatPhoneForWhatsApp(rawPhone);
             const div = document.createElement('div');
             div.className = 'contact-item';
+            div.style.flexDirection = 'column';
+            div.style.alignItems = 'flex-start';
+            div.style.gap = '8px';
+
             div.innerHTML = `
-                <div>
-                    <strong>${c.name || c.nome}</strong> (${c.relation || c.relacao})<br>
-                    <span class="text-muted">${c.phone || c.telefone}</span>
+                <div style="width: 100%; display: flex; justify-content: space-between; align-items: center;">
+                    <div>
+                        <strong>${c.name || c.nome}</strong> (${c.relation || c.relacao})<br>
+                        <span class="text-muted">${rawPhone}</span>
+                    </div>
+                    <button class="btn btn-outline-danger" style="width: auto; padding: 4px 8px; font-size: 11px;" onclick="removeContact(${index})">Excluir</button>
                 </div>
-                <button class="btn btn-outline-danger" style="width: auto; padding: 4px 8px; font-size: 11px;" onclick="removeContact(${index})">Excluir</button>
+                <button class="btn btn-primary" style="padding: 8px; font-size: 12px; background-color: #25D366; color: white; border: none;" onclick="sendWhatsAppAlert('${cleanPhone}', '${c.name || c.nome}')">
+                    📱 Enviar Alerta via WhatsApp
+                </button>
             `;
             contactsList.appendChild(div);
         });
     }
+
+    window.sendWhatsAppAlert = function(cleanPhone, contactName) {
+        let msg = `🚨 ALERTA SENTINELA ONE 🚨\nOlá ${contactName}, estou precisando de ajuda urgente!`;
+        if (lastCoords) {
+            msg += `\n\nMinha localização em tempo real:\nhttps://maps.google.com/?q=${lastCoords.lat},${lastCoords.lon}`;
+        } else {
+            msg += `\n\nPor favor, entre em contato comigo assim que possível.`;
+        }
+
+        const encodedMsg = encodeURIComponent(msg);
+        const whatsappUrl = `https://wa.me/${cleanPhone}?text=${encodedMsg}`;
+
+        addHistory(`Alerta enviado via WhatsApp para: ${contactName}`);
+        window.open(whatsappUrl, '_blank');
+    };
 
     contactForm.addEventListener('submit', async (e) => {
         e.preventDefault();
@@ -233,7 +265,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     renderContacts();
 
-    // BOTÃO DE AJUDA / SOS
+    // AJUDA E SOS
     const btnEmergencySos = document.getElementById('btn-emergency-sos');
     const sosMessageBox = document.getElementById('sos-message-box');
     const btnCopySos = document.getElementById('btn-copy-sos');
@@ -261,7 +293,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     updateSOSMessage();
 
-    // HISTÓRICO DE OCORRÊNCIAS
+    // HISTÓRICO
     const historyList = document.getElementById('history-list');
     const btnClearHistory = document.getElementById('btn-clear-history');
     const btnWipeData = document.getElementById('btn-wipe-data');
@@ -299,7 +331,7 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     btnWipeData.addEventListener('click', () => {
-        if (confirm("ATENÇÃO: Isso apagará todos os contatos e histórico salvos localmente. Deseja prosseguir?")) {
+        if (confirm("ATENÇÃO: Isso apagará todos os dados locais. Deseja prosseguir?")) {
             localStorage.clear();
             contacts = [];
             historyLogs = [];
