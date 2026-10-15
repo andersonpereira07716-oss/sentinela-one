@@ -3,155 +3,123 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SENTINELA ONE</title>
-    <!-- PWA Manifest & Theme -->
-    <link rel="manifest" href="/manifest.json">
-    <meta name="theme-color" content="#0B132B">
-    <link rel="stylesheet" href="style.css">
-    <!-- Leaflet CSS -->
-    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin=""/>
+    <title>SENTINELA ONE - Sua segurança em movimento</title>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <style>
+        :root {
+            --bg-main: #0B132B;
+            --card-bg: #1C2541;
+            --accent-cyan: #00F0FF;
+            --accent-amber: #FFB703;
+            --accent-red: #E63946;
+            --text-primary: #FFFFFF;
+            --text-secondary: #A0AABF;
+        }
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: system-ui, -apple-system, sans-serif; }
+        body { background-color: var(--bg-main); color: var(--text-primary); padding: 15px; }
+        .header { display: flex; justify-content: space-between; align-items: center; background: var(--card-bg); padding: 15px; border-radius: 12px; margin-bottom: 15px; border: 1px solid rgba(0,240,255,0.2); }
+        .status-badge { background: #2A3655; padding: 6px 12px; border-radius: 20px; font-size: 0.8rem; color: var(--text-secondary); display: flex; align-items: center; gap: 6px; }
+        .status-dot { width: 8px; height: 8px; border-radius: 50%; background: #888; }
+        .status-active .status-dot { background: var(--accent-cyan); box-shadow: 0 0 8px var(--accent-cyan); }
+        .status-active { color: var(--accent-cyan); }
+        .nav-tabs { display: flex; gap: 8px; overflow-x: auto; margin-bottom: 15px; }
+        .tab-btn { background: var(--card-bg); border: none; color: var(--text-primary); padding: 10px 16px; border-radius: 8px; font-weight: 600; cursor: pointer; white-space: nowrap; }
+        .tab-btn.active { background: var(--accent-cyan); color: #000; }
+        .card { background: var(--card-bg); padding: 18px; border-radius: 12px; margin-bottom: 15px; border: 1px solid rgba(255,255,255,0.05); }
+        .btn { width: 100%; padding: 14px; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; margin-top: 10px; font-size: 1rem; }
+        .btn-cyan { background: var(--accent-cyan); color: #000; }
+        .btn-amber { background: var(--accent-amber); color: #000; }
+        .btn-red { background: var(--accent-red); color: #FFF; }
+        #map { height: 220px; width: 100%; border-radius: 8px; margin-top: 10px; border: 1px solid var(--accent-cyan); }
+    </style>
 </head>
 <body>
-    <div class="app-container">
-        <!-- CABEÇALHO -->
-        <header class="app-header">
-            <div class="logo-area">
-                <div class="sentinel-shield">🛡️</div>
-                <div>
-                    <h1>SENTINELA ONE</h1>
-                    <div class="slogan">Sua segurança em movimento</div>
-                </div>
-            </div>
-            <div class="status-indicator">
-                <div id="status-dot" class="dot paused"></div>
-                <span id="status-text">Proteção pausada</span>
-            </div>
-        </header>
 
-        <!-- NAVEGAÇÃO POR ABAS -->
-        <nav class="nav-tabs">
-            <button class="tab-btn active" data-target="tab-home">Início</button>
-            <button class="tab-btn" data-target="tab-journey">Jornada</button>
-            <button class="tab-btn" data-target="tab-contacts">Contatos</button>
-            <button class="tab-btn" data-target="tab-help">Ajuda</button>
-            <button class="tab-btn" data-target="tab-history">Histórico</button>
-        </nav>
-
-        <!-- ABA 1: INÍCIO -->
-        <section id="tab-home" class="tab-pane active">
-            <div class="card hero-card">
-                <h2>Central de Monitoramento Pessoal</h2>
-                <p>Gerencie sua segurança em deslocamentos e mantenha seus dados protegidos localmente.</p>
-                <div class="quick-actions">
-                    <button id="btn-start-journey" class="btn btn-primary">Iniciar Jornada</button>
-                    <button id="btn-safe" class="btn btn-secondary">Estou Seguro</button>
-                    <button id="btn-emergency-sos" class="btn btn-danger">Preciso de Ajuda</button>
-                </div>
-            </div>
-
-            <div class="card">
-                <h2>Mapa de Localização</h2>
-                <p id="geo-status" class="text-sm">Toque no botão abaixo para ativar o GPS e o mapa.</p>
-                <div id="map"></div>
-                <div id="geo-coords" class="coords-box">Lat: -- | Long: --</div>
-                <button id="btn-get-location" class="btn btn-outline full-width">Atualizar Localização</button>
-            </div>
-        </section>
-
-        <!-- ABA 2: JORNADA -->
-        <section id="tab-journey" class="tab-pane">
-            <div class="card amber-border">
-                <h2>Jornada Protegida</h2>
-                <p>Informe para onde vai e quanto tempo levará. Se não confirmar chegada a tempo, o alarme será acionado.</p>
-                <div class="form-group">
-                    <label>Destino / Local:</label>
-                    <input type="text" id="input-destination" placeholder="Ex: Faculdade, Trabalho...">
-                </div>
-                <div class="form-group">
-                    <label>Tempo Estimado (minutos):</label>
-                    <input type="number" id="input-duration" value="30" min="5" max="180">
-                </div>
-                <button id="btn-begin-journey" class="btn btn-primary mt-2">Ativar Jornada Protegida</button>
-            </div>
-
-            <div id="journey-active-card" class="card red-border hidden-card">
-                <h3>Deslocamento Ativo para: <span id="current-dest" style="color:var(--accent-cyan)">---</span></h3>
-                <div id="timer-countdown" class="timer-display">30:00</div>
-                <p class="text-warning text-sm">O temporizador está ativo. Confirme chegada ou segurança antes do tempo esgotar.</p>
-                <div class="journey-actions">
-                    <button id="btn-arrive" class="btn btn-success">Cheguei com Segurança</button>
-                    <button id="btn-cancel-journey" class="btn btn-outline-danger">Cancelar</button>
-                </div>
-            </div>
-        </section>
-
-        <!-- ABA 3: CONTATOS -->
-        <section id="tab-contacts" class="tab-pane">
-            <div class="card">
-                <h2>Contatos de Confiança</h2>
-                <p>Cadastre pessoas que conhecem sua rotina. (Armazenado localmente).</p>
-                <form id="contact-form">
-                    <div class="form-group">
-                        <input type="text" id="contact-name" placeholder="Nome do contato" required>
-                    </div>
-                    <div class="form-group">
-                        <input type="tel" id="contact-phone" placeholder="Telefone / WhatsApp (ex: 83999999999)" required>
-                    </div>
-                    <div class="form-group">
-                        <input type="text" id="contact-relation" placeholder="Relação (ex: Mãe, Irmão, Amigo)" required>
-                    </div>
-                    <button type="submit" class="btn btn-primary">Adicionar Contato</button>
-                </form>
-            </div>
-
-            <div class="card">
-                <h2>Lista de Contatos</h2>
-                <div id="contacts-list" class="list-container">
-                    <p class="text-muted">Nenhum contato cadastrado.</p>
-                </div>
-            </div>
-        </section>
-
-        <!-- ABA 4: AJUDA -->
-        <section id="tab-help" class="tab-pane">
-            <div class="card red-border">
-                <h2>Central de Emergência</h2>
-                <p>Em caso de perigo imediato, utilize os serviços oficiais abaixo:</p>
-                <div class="emergency-buttons">
-                    <a href="tel:190" class="btn-call btn-danger">🚨 Polícia Militar (190)</a>
-                    <a href="tel:192" class="btn-call btn-secondary">🚑 SAMU (192)</a>
-                    <a href="tel:193" class="btn-call btn-outline-danger">🚒 Bombeiros (193)</a>
-                </div>
-            </div>
-
-            <div class="card">
-                <h2>Mensagem Rápida de Socorro</h2>
-                <p>Gere uma mensagem pré-formatada para copiar e enviar rapidamente.</p>
-                <textarea id="sos-message-box" class="text-area-box" readonly>ESTOU EM SITUAÇÃO DE RISCO! Preciso de ajuda urgente.</textarea>
-                <button id="btn-copy-sos" class="btn btn-outline">Copiar Mensagem de Socorro</button>
-            </div>
-        </section>
-
-        <!-- ABA 5: HISTÓRICO -->
-        <section id="tab-history" class="tab-pane">
-            <div class="card">
-                <h2>Histórico de Ocorrências</h2>
-                <div id="history-list" class="list-container">
-                    <p class="text-muted">Nenhum evento registrado.</p>
-                </div>
-                <button id="btn-clear-history" class="btn btn-outline-danger mt-2">Limpar Histórico</button>
-            </div>
-
-            <div class="card">
-                <h2>Privacidade e Dados</h2>
-                <p>Seus dados residem exclusivamente no armazenamento local do navegador (LocalStorage) e não são enviados para servidores externos nesta versão.</p>
-                <button id="btn-wipe-data" class="btn btn-danger">Excluir Todos os Dados Locais</button>
-            </div>
-        </section>
+    <div class="header">
+        <div>
+            <h2 style="color: var(--accent-cyan);">SENTINELA ONE</h2>
+            <small style="color: var(--text-secondary);">Sua segurança em movimento</small>
+        </div>
+        <div id="statusBadge" class="status-badge">
+            <span class="status-dot"></span> <span id="statusText">Proteção pausada</span>
+        </div>
     </div>
 
-    <!-- Leaflet JS -->
-    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
-    <script src="app.js"></script>
+    <div class="nav-tabs">
+        <button class="tab-btn active" onclick="switchTab('inicio')">Início</button>
+        <button class="tab-btn" onclick="switchTab('jornada')">Jornada</button>
+        <button class="tab-btn" onclick="switchTab('contatos')">Contatos</button>
+        <button class="tab-btn" onclick="switchTab('ajuda')">Ajuda</button>
+        <button class="tab-btn" onclick="switchTab('historico')">Histórico</button>
+    </div>
+
+    <div id="tab-inicio" class="card">
+        <h3>Central de Monitoramento Pessoal</h3>
+        <p style="color: var(--text-secondary); font-size: 0.9rem; margin-top: 5px;">Gerencie sua segurança em deslocamentos.</p>
+        <button class="btn btn-cyan" onclick="toggleProtecao()">Iniciar / Alternar Jornada</button>
+        <button class="btn btn-amber" onclick="testarPanicBiometrico()">⚡ Simular Teste de Pulsação (SOS)</button>
+        <button class="btn btn-red" onclick="alert('Alerta de Socorro Enviado!')">Preciso de Ajuda</button>
+    </div>
+
+    <div class="card">
+        <h3>Mapa de Localização</h3>
+        <div id="map"></div>
+        <div style="margin-top: 10px; font-size: 0.85rem; color: var(--accent-cyan);" id="coords">Lat: -- | Long: --</div>
+        <button class="btn btn-cyan" style="margin-top: 10px;" onclick="updateLocation()">Atualizar Localização</button>
+    </div>
+
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script src="js/security-features.js"></script>
+    <script src="js/cardio-monitor.js"></script>
+    <script>
+        let map, marker, protecaoAtiva = false;
+
+        function initMap() {
+            map = L.map('map').setView([-7.02358, -37.26164], 14);
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                className: 'map-tiles'
+            }).addTo(map);
+            marker = L.marker([-7.02358, -37.26164]).addTo(map).bindPopup("Você está aqui").openPopup();
+        }
+
+        function toggleProtecao() {
+            protecaoAtiva = !protecaoAtiva;
+            const badge = document.getElementById('statusBadge');
+            const text = document.getElementById('statusText');
+            if (protecaoAtiva) {
+                badge.classList.add('status-active');
+                text.innerText = 'Proteção Ativa';
+            } else {
+                badge.classList.remove('status-active');
+                text.innerText = 'Proteção pausada';
+            }
+        }
+
+        function testarPanicBiometrico() {
+            if (window.CardioMonitor) {
+                window.CardioMonitor.analyzeHeartRate(135);
+                alert("Simulação de pico biométrico (135 BPM) executada com sucesso!");
+            }
+        }
+
+        function updateLocation() {
+            if (navigator.geolocation) {
+                navigator.geolocation.getCurrentPosition(pos => {
+                    const lat = pos.coords.latitude;
+                    const lng = pos.coords.longitude;
+                    map.setView([lat, lng], 16);
+                    marker.setLatLng([lat, lng]);
+                    document.getElementById('coords').innerText = `Lat: ${lat.toFixed(5)} | Long: ${lng.toFixed(5)}`;
+                });
+            }
+        }
+
+        function switchTab(tab) {
+            document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+            event.target.classList.add('active');
+        }
+
+        window.onload = initMap;
+    </script>
 </body>
 </html>
