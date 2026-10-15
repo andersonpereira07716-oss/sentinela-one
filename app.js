@@ -1,5 +1,3 @@
-cd ~/sentinela-one
-cat << 'EOF' > app.js
 document.addEventListener('DOMContentLoaded', () => {
     const API_URL = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1' 
         ? 'http://localhost:3000/api' 
@@ -15,7 +13,7 @@ document.addEventListener('DOMContentLoaded', () => {
             tabPanes.forEach(p => p.classList.remove('active'));
             btn.classList.add('active');
             const targetPane = document.getElementById(btn.dataset.target);
-            targetPane.classList.add('active');
+            if (targetPane) targetPane.classList.add('active');
 
             if (btn.dataset.target === 'tab-home' && map) {
                 setTimeout(() => map.invalidateSize(), 200);
@@ -27,8 +25,8 @@ document.addEventListener('DOMContentLoaded', () => {
     const statusText = document.getElementById('status-text');
 
     function updateStatus(state, text) {
-        statusDot.className = 'dot ' + state;
-        statusText.textContent = text;
+        if (statusDot) statusDot.className = 'dot ' + state;
+        if (statusText) statusText.textContent = text;
     }
 
     // MAPA LEAFLET
@@ -36,7 +34,8 @@ document.addEventListener('DOMContentLoaded', () => {
     let marker = null;
 
     function initDefaultMap(lat = -7.02413, lon = -37.26168, zoom = 14) {
-        if (!map) {
+        const mapElement = document.getElementById('map');
+        if (mapElement && !map) {
             map = L.map('map').setView([lat, lon], zoom);
             L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
                 maxZoom: 19,
@@ -53,42 +52,46 @@ document.addEventListener('DOMContentLoaded', () => {
     const btnGetLocation = document.getElementById('btn-get-location');
     let lastCoords = null;
 
-    btnGetLocation.addEventListener('click', () => {
-        if (!navigator.geolocation) {
-            geoStatus.textContent = "Geolocalização não suportada.";
-            return;
-        }
-        geoStatus.textContent = "Obtendo GPS...";
-        navigator.geolocation.getCurrentPosition(
-            (position) => {
-                const lat = position.coords.latitude.toFixed(5);
-                const lon = position.coords.longitude.toFixed(5);
-                lastCoords = { lat, lon };
-                geoCoords.textContent = `Lat: ${lat} | Long: ${lon}`;
-                geoStatus.textContent = "Localização obtida com sucesso!";
+    if (btnGetLocation) {
+        btnGetLocation.addEventListener('click', () => {
+            if (!navigator.geolocation) {
+                if (geoStatus) geoStatus.textContent = "Geolocalização não suportada.";
+                return;
+            }
+            if (geoStatus) geoStatus.textContent = "Obtendo GPS...";
+            navigator.geolocation.getCurrentPosition(
+                (position) => {
+                    const lat = position.coords.latitude.toFixed(5);
+                    const lon = position.coords.longitude.toFixed(5);
+                    lastCoords = { lat, lon };
+                    if (geoCoords) geoCoords.textContent = `Lat: ${lat} | Long: ${lon}`;
+                    if (geoStatus) geoStatus.textContent = "Localização obtida com sucesso!";
 
-                const userLat = position.coords.latitude;
-                const userLon = position.coords.longitude;
-                
-                map.setView([userLat, userLon], 16);
-                if (marker) {
-                    marker.setLatLng([userLat, userLon]);
-                } else {
-                    marker = L.marker([userLat, userLon]).addTo(map)
-                        .bindPopup('<b>Você está aqui</b>').openPopup();
-                }
-                map.invalidateSize();
+                    const userLat = position.coords.latitude;
+                    const userLon = position.coords.longitude;
+                    
+                    if (map) {
+                        map.setView([userLat, userLon], 16);
+                        if (marker) {
+                            marker.setLatLng([userLat, userLon]);
+                        } else {
+                            marker = L.marker([userLat, userLon]).addTo(map)
+                                .bindPopup('<b>Você está aqui</b>').openPopup();
+                        }
+                        map.invalidateSize();
+                    }
 
-                addHistory("Localização e mapa atualizados.");
-                updateSOSMessage();
-            },
-            (error) => {
-                geoStatus.textContent = "Erro GPS: " + error.message;
-                addHistory("Falha na obtenção de localização.");
-            },
-            { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
-        );
-    });
+                    addHistory("Localização e mapa atualizados.");
+                    updateSOSMessage();
+                },
+                (error) => {
+                    if (geoStatus) geoStatus.textContent = "Erro GPS: " + error.message;
+                    addHistory("Falha na obtenção de localização.");
+                },
+                { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
+            );
+        });
+    }
 
     // JORNADA PROTEGIDA
     const btnStartJourneyTab = document.getElementById('btn-start-journey');
@@ -103,42 +106,49 @@ document.addEventListener('DOMContentLoaded', () => {
     let journeyTimer = null;
     let timeLeft = 0;
 
-    btnStartJourneyTab.addEventListener('click', () => {
-        document.querySelector('[data-target="tab-journey"]').click();
-    });
+    if (btnStartJourneyTab) {
+        btnStartJourneyTab.addEventListener('click', () => {
+            const journeyTabBtn = document.querySelector('[data-target="tab-journey"]');
+            if (journeyTabBtn) journeyTabBtn.click();
+        });
+    }
 
-    btnSafe.addEventListener('click', () => {
-        if (journeyTimer) {
-            clearInterval(journeyTimer);
-            journeyActiveCard.classList.add('hidden-card');
-        }
-        updateStatus('paused', 'Proteção pausada');
-        addHistory("Confirmação manual de segurança emitida.");
-        alert("Sinal de segurança emitido. Estado atualizado.");
-    });
+    if (btnSafe) {
+        btnSafe.addEventListener('click', () => {
+            if (journeyTimer) clearInterval(journeyTimer);
+            if (journeyActiveCard) journeyActiveCard.classList.add('hidden-card');
+            updateStatus('paused', 'Proteção pausada');
+            addHistory("Confirmação manual de segurança emitida.");
+            alert("Sinal de segurança emitido. Estado atualizado.");
+        });
+    }
 
-    btnBeginJourney.addEventListener('click', async () => {
-        const destination = document.getElementById('input-destination').value.trim() || "Destino não informado";
-        const durationMinutes = parseInt(document.getElementById('input-duration').value) || 30;
-        
-        currentDest.textContent = destination;
-        timeLeft = durationMinutes * 60;
-        
-        journeyActiveCard.classList.remove('hidden-card');
-        updateStatus('active', 'Em deslocamento');
-        addHistory(`Jornada iniciada para: ${destination} (${durationMinutes} min)`);
-        startTimer();
+    if (btnBeginJourney) {
+        btnBeginJourney.addEventListener('click', async () => {
+            const destInput = document.getElementById('input-destination');
+            const durInput = document.getElementById('input-duration');
+            const destination = destInput ? destInput.value.trim() : "Destino não informado";
+            const durationMinutes = durInput ? parseInt(durInput.value) || 30 : 30;
+            
+            if (currentDest) currentDest.textContent = destination;
+            timeLeft = durationMinutes * 60;
+            
+            if (journeyActiveCard) journeyActiveCard.classList.remove('hidden-card');
+            updateStatus('active', 'Em deslocamento');
+            addHistory(`Jornada iniciada para: ${destination} (${durationMinutes} min)`);
+            startTimer();
 
-        try {
-            await fetch(`${API_URL}/jornada`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ destino, duracaoMinutos, usuario: "Anderson" })
-            });
-        } catch (err) {
-            console.log("Aviso: API offline, jornada registrada localmente.");
-        }
-    });
+            try {
+                await fetch(`${API_URL}/jornada`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ destino: destination, duracaoMinutos: durationMinutes, usuario: "Anderson" })
+                });
+            } catch (err) {
+                console.log("Aviso: API offline, jornada registrada localmente.");
+            }
+        });
+    }
 
     function startTimer() {
         clearInterval(journeyTimer);
@@ -147,40 +157,42 @@ document.addEventListener('DOMContentLoaded', () => {
                 timeLeft--;
                 const mins = Math.floor(timeLeft / 60).toString().padStart(2, '0');
                 const secs = (timeLeft % 60).toString().padStart(2, '0');
-                timerCountdown.textContent = `${mins}:${secs}`;
+                if (timerCountdown) timerCountdown.textContent = `${mins}:${secs}`;
             } else {
                 clearInterval(journeyTimer);
                 updateStatus('pending', 'Confirmação pendente');
-                timerCountdown.textContent = "00:00";
+                if (timerCountdown) timerCountdown.textContent = "00:00";
                 addHistory("Prazo da jornada expirado! Disparando protocolo de pânico.");
                 triggerPanicProtocol();
             }
         }, 1000);
     }
 
-    btnArrive.addEventListener('click', () => {
-        clearInterval(journeyTimer);
-        journeyActiveCard.classList.add('hidden-card');
-        updateStatus('paused', 'Proteção pausada');
-        addHistory("Jornada concluída com segurança.");
-        alert("Que ótimo! Jornada encerrada com segurança.");
-    });
+    if (btnArrive) {
+        btnArrive.addEventListener('click', () => {
+            clearInterval(journeyTimer);
+            if (journeyActiveCard) journeyActiveCard.classList.add('hidden-card');
+            updateStatus('paused', 'Proteção pausada');
+            addHistory("Jornada concluída com segurança.");
+            alert("Que ótimo! Jornada encerrada com segurança.");
+        });
+    }
 
-    btnCancelJourney.addEventListener('click', () => {
-        clearInterval(journeyTimer);
-        journeyActiveCard.classList.add('hidden-card');
-        updateStatus('paused', 'Proteção pausada');
-        addHistory("Jornada cancelada pelo usuário.");
-    });
+    if (btnCancelJourney) {
+        btnCancelJourney.addEventListener('click', () => {
+            clearInterval(journeyTimer);
+            if (journeyActiveCard) journeyActiveCard.classList.add('hidden-card');
+            updateStatus('paused', 'Proteção pausada');
+            addHistory("Jornada cancelada pelo usuário.");
+        });
+    }
 
-    // 🛡️ NÍVEL 10: MODO PÁNICO SILENCIOSO & PROTOCOLO DE EMERGÊNCIA
     function triggerPanicProtocol() {
         updateStatus('danger', 'ALERTA DE PÂNICO ATIVO');
         addHistory("⚠️ ALERTA CRÍTICO: Tempo esgotado sem confirmação!");
         
         let contacts = JSON.parse(localStorage.getItem('sentinela_contacts')) || [];
         if (contacts.length > 0) {
-            // Dispara para o primeiro contato de confiança cadastrado automaticamente
             const c = contacts[0];
             const cleanPhone = formatPhoneForWhatsApp(c.phone || c.telefone || '');
             let msg = `🚨 ALERTA CRÍTICO SENTINELA ONE 🚨\nO meu tempo de jornada expirou e não consegui confirmar a minha segurança! Estou em possível situação de risco.`;
@@ -194,7 +206,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    // CONTATOS DE CONFIANÇA & DISPARO WHATSAPP
+    // CONTATOS & WHATSAPP
     const contactForm = document.getElementById('contact-form');
     const contactsList = document.getElementById('contacts-list');
     let contacts = JSON.parse(localStorage.getItem('sentinela_contacts')) || [];
@@ -208,6 +220,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function renderContacts() {
+        if (!contactsList) return;
         if (contacts.length === 0) {
             contactsList.innerHTML = '<p class="text-muted">Nenhum contato cadastrado.</p>';
             return;
@@ -253,31 +266,37 @@ document.addEventListener('DOMContentLoaded', () => {
         window.open(whatsappUrl, '_blank');
     };
 
-    contactForm.addEventListener('submit', async (e) => {
-        e.preventDefault();
-        const name = document.getElementById('contact-name').value.trim();
-        const phone = document.getElementById('contact-phone').value.trim();
-        const relation = document.getElementById('contact-relation').value.trim();
+    if (contactForm) {
+        contactForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const nameInput = document.getElementById('contact-name');
+            const phoneInput = document.getElementById('contact-phone');
+            const relInput = document.getElementById('contact-relation');
 
-        if (name && phone && relation) {
-            const novoContato = { name, phone, relation };
-            contacts.push(novoContato);
-            localStorage.setItem('sentinela_contacts', JSON.stringify(contacts));
-            contactForm.reset();
-            renderContacts();
-            addHistory(`Contato adicionado: ${name}`);
+            const name = nameInput ? nameInput.value.trim() : '';
+            const phone = phoneInput ? phoneInput.value.trim() : '';
+            const relation = relInput ? relInput.value.trim() : '';
 
-            try {
-                await fetch(`${API_URL}/contatos`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ nome: name, telefone: phone, relacao: relation })
-                });
-            } catch (err) {
-                console.log("Aviso: API offline, contato salvo apenas localmente.");
+            if (name && phone) {
+                const novoContato = { name, phone, relation: relation || "Amigo(a)" };
+                contacts.push(novoContato);
+                localStorage.setItem('sentinela_contacts', JSON.stringify(contacts));
+                contactForm.reset();
+                renderContacts();
+                addHistory(`Contato adicionado: ${name}`);
+
+                try {
+                    await fetch(`${API_URL}/contatos`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ nome: name, telefone: phone, relacao: relation })
+                    });
+                } catch (err) {
+                    console.log("Aviso: API offline, contato salvo localmente.");
+                }
             }
-        }
-    });
+        });
+    }
 
     window.removeContact = function(index) {
         const removed = contacts.splice(index, 1);
@@ -293,27 +312,34 @@ document.addEventListener('DOMContentLoaded', () => {
     const sosMessageBox = document.getElementById('sos-message-box');
     const btnCopySos = document.getElementById('btn-copy-sos');
 
-    btnEmergencySos.addEventListener('click', () => {
-        document.querySelector('[data-target="tab-help"]').click();
-        updateStatus('danger', 'Alerta de ajuda');
-        addHistory("Botão de ajuda acionado pelo usuário.");
-        triggerPanicProtocol();
-    });
+    if (btnEmergencySos) {
+        btnEmergencySos.addEventListener('click', () => {
+            const helpTab = document.querySelector('[data-target="tab-help"]');
+            if (helpTab) helpTab.click();
+            updateStatus('danger', 'Alerta de ajuda');
+            addHistory("Botão de ajuda acionado pelo usuário.");
+            triggerPanicProtocol();
+        });
+    }
 
     function updateSOSMessage() {
         let msg = "ESTOU EM SITUAÇÃO DE RISCO! Preciso de ajuda urgente.";
         if (lastCoords) {
             msg += ` Minha última localização: https://maps.google.com/?q=${lastCoords.lat},${lastCoords.lon}`;
         }
-        sosMessageBox.value = msg;
+        if (sosMessageBox) sosMessageBox.value = msg;
     }
 
-    btnCopySos.addEventListener('click', () => {
-        sosMessageBox.select();
-        navigator.clipboard.writeText(sosMessageBox.value)
-            .then(() => alert("Mensagem de socorro copiada para a área de transferência!"))
-            .catch(() => alert("Erro ao copiar mensagem."));
-    });
+    if (btnCopySos) {
+        btnCopySos.addEventListener('click', () => {
+            if (sosMessageBox) {
+                sosMessageBox.select();
+                navigator.clipboard.writeText(sosMessageBox.value)
+                    .then(() => alert("Mensagem de socorro copiada para a área de transferência!"))
+                    .catch(() => alert("Erro ao copiar mensagem."));
+            }
+        });
+    }
 
     updateSOSMessage();
 
@@ -333,6 +359,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function renderHistory() {
+        if (!historyList) return;
         if (historyLogs.length === 0) {
             historyList.innerHTML = '<p class="text-muted">Nenhum evento registrado.</p>';
             return;
@@ -346,25 +373,28 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    btnClearHistory.addEventListener('click', () => {
-        if (confirm("Deseja limpar todo o histórico?")) {
-            historyLogs = [];
-            localStorage.removeItem('sentinela_history');
-            renderHistory();
-        }
-    });
+    if (btnClearHistory) {
+        btnClearHistory.addEventListener('click', () => {
+            if (confirm("Deseja limpar todo o histórico?")) {
+                historyLogs = [];
+                localStorage.removeItem('sentinela_history');
+                renderHistory();
+            }
+        });
+    }
 
-    btnWipeData.addEventListener('click', () => {
-        if (confirm("ATENÇÃO: Isso apagará todos os dados locais. Deseja prosseguir?")) {
-            localStorage.clear();
-            contacts = [];
-            historyLogs = [];
-            renderContacts();
-            renderHistory();
-            alert("Dados locais excluídos com sucesso.");
-        }
-    });
+    if (btnWipeData) {
+        btnWipeData.addEventListener('click', () => {
+            if (confirm("ATENÇÃO: Isso apagará todos os dados locais. Deseja prosseguir?")) {
+                localStorage.clear();
+                contacts = [];
+                historyLogs = [];
+                renderContacts();
+                renderHistory();
+                alert("Dados locais excluídos com sucesso.");
+            }
+        });
+    }
 
     renderHistory();
 });
-EOF
