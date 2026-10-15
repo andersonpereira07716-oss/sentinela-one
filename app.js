@@ -1,4 +1,9 @@
 document.addEventListener('DOMContentLoaded', () => {
+    // URL da API (Deteta se está local ou em produção)
+    const API_URL = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1' 
+        ? 'http://localhost:3000/api' 
+        : 'https://sentinela-api.onrender.com/api';
+
     // ABAS
     const tabButtons = document.querySelectorAll('.tab-btn');
     const tabPanes = document.querySelectorAll('.tab-pane');
@@ -29,8 +34,7 @@ document.addEventListener('DOMContentLoaded', () => {
     let map = null;
     let marker = null;
 
-    // Inicializar mapa com coordenadas padrão (ex: Brasil / Centro) para ele renderizar imediatamente
-    function initDefaultMap(lat = -15.7801, lon = -47.9292, zoom = 4) {
+    function initDefaultMap(lat = -7.02413, lon = -37.26168, zoom = 14) {
         if (!map) {
             map = L.map('map').setView([lat, lon], zoom);
             L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
@@ -40,7 +44,6 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    // Chamar inicialização padrão logo ao carregar
     initDefaultMap();
 
     // GEOLOCALIZAÇÃO
@@ -63,7 +66,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 geoCoords.textContent = `Lat: ${lat} | Long: ${lon}`;
                 geoStatus.textContent = "Localização obtida com sucesso!";
 
-                // Centralizar mapa na posição real do usuário
                 const userLat = position.coords.latitude;
                 const userLon = position.coords.longitude;
                 
@@ -114,7 +116,7 @@ document.addEventListener('DOMContentLoaded', () => {
         alert("Sinal de segurança emitido. Estado atualizado.");
     });
 
-    btnBeginJourney.addEventListener('click', () => {
+    btnBeginJourney.addEventListener('click', async () => {
         const destination = document.getElementById('input-destination').value.trim() || "Destino não informado";
         const durationMinutes = parseInt(document.getElementById('input-duration').value) || 30;
         
@@ -125,6 +127,16 @@ document.addEventListener('DOMContentLoaded', () => {
         updateStatus('active', 'Em deslocamento');
         addHistory(`Jornada iniciada para: ${destination} (${durationMinutes} min)`);
         startTimer();
+
+        try {
+            await fetch(`${API_URL}/jornada`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ destino, duracaoMinutos, usuario: "Anderson" })
+            });
+        } catch (err) {
+            console.log("Aviso: API offline, jornada mantida localmente.");
+        }
     });
 
     function startTimer() {
@@ -176,8 +188,8 @@ document.addEventListener('DOMContentLoaded', () => {
             div.className = 'contact-item';
             div.innerHTML = `
                 <div>
-                    <strong>${c.name}</strong> (${c.relation})<br>
-                    <span class="text-muted">${c.phone}</span>
+                    <strong>${c.name || c.nome}</strong> (${c.relation || c.relacao})<br>
+                    <span class="text-muted">${c.phone || c.telefone}</span>
                 </div>
                 <button class="btn btn-outline-danger" style="width: auto; padding: 4px 8px; font-size: 11px;" onclick="removeContact(${index})">Excluir</button>
             `;
@@ -185,18 +197,29 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    contactForm.addEventListener('submit', (e) => {
+    contactForm.addEventListener('submit', async (e) => {
         e.preventDefault();
         const name = document.getElementById('contact-name').value.trim();
         const phone = document.getElementById('contact-phone').value.trim();
         const relation = document.getElementById('contact-relation').value.trim();
 
         if (name && phone && relation) {
-            contacts.push({ name, phone, relation });
+            const novoContato = { name, phone, relation };
+            contacts.push(novoContato);
             localStorage.setItem('sentinela_contacts', JSON.stringify(contacts));
             contactForm.reset();
             renderContacts();
             addHistory(`Contato adicionado: ${name}`);
+
+            try {
+                await fetch(`${API_URL}/contatos`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ nome: name, telefone: phone, relacao: relation })
+                });
+            } catch (err) {
+                console.log("Aviso: API offline, contato salvo apenas localmente.");
+            }
         }
     });
 
@@ -204,7 +227,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const removed = contacts.splice(index, 1);
         localStorage.setItem('sentinela_contacts', JSON.stringify(contacts));
         renderContacts();
-        addHistory(`Contato removido: ${removed[0].name}`);
+        addHistory(`Contato removido: ${removed[0].name || removed[0].nome}`);
     };
 
     renderContacts();
@@ -261,7 +284,7 @@ document.addEventListener('DOMContentLoaded', () => {
         historyLogs.forEach(h => {
             const div = document.createElement('div');
             div.className = 'history-item';
-            div.innerHTML = `<span>${h.text}</span><span class="text-muted">${h.time}</span>`;
+            div.innerHTML = `<span>${h.text || h.texto}</span><span class="text-muted">${h.time || new Date(h.data).toLocaleTimeString('pt-BR')}</span>`;
             historyList.appendChild(div);
         });
     }
