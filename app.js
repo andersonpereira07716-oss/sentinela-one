@@ -1,8 +1,9 @@
 document.addEventListener('DOMContentLoaded', () => {
     // URL da API (Deteta se está local ou em produção)
     const API_URL = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1' 
-        ? 'http://localhost:3000/api' 
-        : 'https://sentinela-api.onrender.com/api';
+    ? 'http://localhost:3000/api' 
+    : 'https://televisions-junior-surge-those.trycloudflare.com/api';
+
 
     // ABAS
     const tabButtons = document.querySelectorAll('.tab-btn');
