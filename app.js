@@ -1,3 +1,5 @@
+cd ~/sentinela-one
+cat << 'EOF' > app.js
 document.addEventListener('DOMContentLoaded', () => {
     const API_URL = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1' 
         ? 'http://localhost:3000/api' 
@@ -150,8 +152,8 @@ document.addEventListener('DOMContentLoaded', () => {
                 clearInterval(journeyTimer);
                 updateStatus('pending', 'Confirmação pendente');
                 timerCountdown.textContent = "00:00";
-                addHistory("Prazo da jornada expirado! Confirmação pendente.");
-                alert("Atenção! O tempo estimado da jornada expirou. Por favor, confirme sua segurança.");
+                addHistory("Prazo da jornada expirado! Disparando protocolo de pânico.");
+                triggerPanicProtocol();
             }
         }, 1000);
     }
@@ -170,6 +172,27 @@ document.addEventListener('DOMContentLoaded', () => {
         updateStatus('paused', 'Proteção pausada');
         addHistory("Jornada cancelada pelo usuário.");
     });
+
+    // 🛡️ NÍVEL 10: MODO PÁNICO SILENCIOSO & PROTOCOLO DE EMERGÊNCIA
+    function triggerPanicProtocol() {
+        updateStatus('danger', 'ALERTA DE PÂNICO ATIVO');
+        addHistory("⚠️ ALERTA CRÍTICO: Tempo esgotado sem confirmação!");
+        
+        let contacts = JSON.parse(localStorage.getItem('sentinela_contacts')) || [];
+        if (contacts.length > 0) {
+            // Dispara para o primeiro contato de confiança cadastrado automaticamente
+            const c = contacts[0];
+            const cleanPhone = formatPhoneForWhatsApp(c.phone || c.telefone || '');
+            let msg = `🚨 ALERTA CRÍTICO SENTINELA ONE 🚨\nO meu tempo de jornada expirou e não consegui confirmar a minha segurança! Estou em possível situação de risco.`;
+            if (lastCoords) {
+                msg += `\n\nMinha última localização conhecida:\nhttps://maps.google.com/?q=${lastCoords.lat},${lastCoords.lon}`;
+            }
+            const whatsappUrl = `https://wa.me/${cleanPhone}?text=${encodeURIComponent(msg)}`;
+            window.open(whatsappUrl, '_blank');
+        } else {
+            alert("⚠️ ALERTA: Nenhum contato cadastrado para disparo automático de emergência!");
+        }
+    }
 
     // CONTATOS DE CONFIANÇA & DISPARO WHATSAPP
     const contactForm = document.getElementById('contact-form');
@@ -274,6 +297,7 @@ document.addEventListener('DOMContentLoaded', () => {
         document.querySelector('[data-target="tab-help"]').click();
         updateStatus('danger', 'Alerta de ajuda');
         addHistory("Botão de ajuda acionado pelo usuário.");
+        triggerPanicProtocol();
     });
 
     function updateSOSMessage() {
@@ -343,3 +367,4 @@ document.addEventListener('DOMContentLoaded', () => {
 
     renderHistory();
 });
+EOF
