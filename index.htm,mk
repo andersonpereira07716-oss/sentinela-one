@@ -1,0 +1,160 @@
+cd ~/sentinela-one
+cat << 'EOF' > index.html
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SENTINELA ONE</title>
+    <!-- PWA Manifest & Theme -->
+    <link rel="manifest" href="/manifest.json">
+    <meta name="theme-color" content="#0B132B">
+    <link rel="stylesheet" href="style.css">
+    <!-- Leaflet CSS -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin=""/>
+</head>
+<body>
+    <div class="app-container">
+        <!-- CABEÇALHO -->
+        <header class="app-header">
+            <div class="logo-area">
+                <div class="sentinel-shield">🛡️</div>
+                <div>
+                    <h1>SENTINELA ONE</h1>
+                    <div class="slogan">Sua segurança em movimento</div>
+                </div>
+            </div>
+            <div class="status-indicator">
+                <div id="status-dot" class="dot paused"></div>
+                <span id="status-text">Proteção pausada</span>
+            </div>
+        </header>
+
+        <!-- NAVEGAÇÃO POR ABAS -->
+        <nav class="nav-tabs">
+            <button class="tab-btn active" data-target="tab-home">Início</button>
+            <button class="tab-btn" data-target="tab-journey">Jornada</button>
+            <button class="tab-btn" data-target="tab-contacts">Contatos</button>
+            <button class="tab-btn" data-target="tab-help">Ajuda</button>
+            <button class="tab-btn" data-target="tab-history">Histórico</button>
+        </nav>
+
+        <!-- ABA 1: INÍCIO -->
+        <section id="tab-home" class="tab-pane active">
+            <div class="card hero-card">
+                <h2>Central de Monitoramento Pessoal</h2>
+                <p>Gerencie sua segurança em deslocamentos e mantenha seus dados protegidos localmente.</p>
+                <div class="quick-actions">
+                    <button id="btn-start-journey" class="btn btn-primary">Iniciar Jornada</button>
+                    <button id="btn-safe" class="btn btn-secondary">Estou Seguro</button>
+                    <button id="btn-emergency-sos" class="btn btn-danger">Preciso de Ajuda</button>
+                </div>
+            </div>
+
+            <div class="card">
+                <h2>Mapa de Localização</h2>
+                <p id="geo-status" class="text-sm">Toque no botão abaixo para ativar o GPS e o mapa.</p>
+                <div id="map"></div>
+                <div id="geo-coords" class="coords-box">Lat: -- | Long: --</div>
+                <button id="btn-get-location" class="btn btn-outline full-width">Atualizar Localização</button>
+            </div>
+        </section>
+
+        <!-- ABA 2: JORNADA -->
+        <section id="tab-journey" class="tab-pane">
+            <div class="card amber-border">
+                <h2>Jornada Protegida</h2>
+                <p>Informe para onde vai e quanto tempo levará. Se não confirmar chegada a tempo, o alarme será acionado.</p>
+                <div class="form-group">
+                    <label>Destino / Local:</label>
+                    <input type="text" id="input-destination" placeholder="Ex: Faculdade, Trabalho...">
+                </div>
+                <div class="form-group">
+                    <label>Tempo Estimado (minutos):</label>
+                    <input type="number" id="input-duration" value="30" min="5" max="180">
+                </div>
+                <button id="btn-begin-journey" class="btn btn-primary mt-2">Ativar Jornada Protegida</button>
+            </div>
+
+            <div id="journey-active-card" class="card red-border hidden-card">
+                <h3>Deslocamento Ativo para: <span id="current-dest" style="color:var(--accent-cyan)">---</span></h3>
+                <div id="timer-countdown" class="timer-display">30:00</div>
+                <p class="text-warning text-sm">O temporizador está ativo. Confirme chegada ou segurança antes do tempo esgotar.</p>
+                <div class="journey-actions">
+                    <button id="btn-arrive" class="btn btn-success">Cheguei com Segurança</button>
+                    <button id="btn-cancel-journey" class="btn btn-outline-danger">Cancelar</button>
+                </div>
+            </div>
+        </section>
+
+        <!-- ABA 3: CONTATOS -->
+        <section id="tab-contacts" class="tab-pane">
+            <div class="card">
+                <h2>Contatos de Confiança</h2>
+                <p>Cadastre pessoas que conhecem sua rotina. (Armazenado localmente).</p>
+                <form id="contact-form">
+                    <div class="form-group">
+                        <input type="text" id="contact-name" placeholder="Nome do contato" required>
+                    </div>
+                    <div class="form-group">
+                        <input type="tel" id="contact-phone" placeholder="Telefone / WhatsApp (ex: 83999999999)" required>
+                    </div>
+                    <div class="form-group">
+                        <input type="text" id="contact-relation" placeholder="Relação (ex: Mãe, Irmão, Amigo)" required>
+                    </div>
+                    <button type="submit" class="btn btn-primary">Adicionar Contato</button>
+                </form>
+            </div>
+
+            <div class="card">
+                <h2>Lista de Contatos</h2>
+                <div id="contacts-list" class="list-container">
+                    <p class="text-muted">Nenhum contato cadastrado.</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- ABA 4: AJUDA -->
+        <section id="tab-help" class="tab-pane">
+            <div class="card red-border">
+                <h2>Central de Emergência</h2>
+                <p>Em caso de perigo imediato, utilize os serviços oficiais abaixo:</p>
+                <div class="emergency-buttons">
+                    <a href="tel:190" class="btn-call btn-danger">🚨 Polícia Militar (190)</a>
+                    <a href="tel:192" class="btn-call btn-secondary">🚑 SAMU (192)</a>
+                    <a href="tel:193" class="btn-call btn-outline-danger">🚒 Bombeiros (193)</a>
+                </div>
+            </div>
+
+            <div class="card">
+                <h2>Mensagem Rápida de Socorro</h2>
+                <p>Gere uma mensagem pré-formatada para copiar e enviar rapidamente.</p>
+                <textarea id="sos-message-box" class="text-area-box" readonly>ESTOU EM SITUAÇÃO DE RISCO! Preciso de ajuda urgente.</textarea>
+                <button id="btn-copy-sos" class="btn btn-outline">Copiar Mensagem de Socorro</button>
+            </div>
+        </section>
+
+        <!-- ABA 5: HISTÓRICO -->
+        <section id="tab-history" class="tab-pane">
+            <div class="card">
+                <h2>Histórico de Ocorrências</h2>
+                <div id="history-list" class="list-container">
+                    <p class="text-muted">Nenhum evento registrado.</p>
+                </div>
+                <button id="btn-clear-history" class="btn btn-outline-danger mt-2">Limpar Histórico</button>
+            </div>
+
+            <div class="card">
+                <h2>Privacidade e Dados</h2>
+                <p>Seus dados residem exclusivamente no armazenamento local do navegador (LocalStorage) e não são enviados para servidores externos nesta versão.</p>
+                <button id="btn-wipe-data" class="btn btn-danger">Excluir Todos os Dados Locais</button>
+            </div>
+        </section>
+    </div>
+
+    <!-- Leaflet JS -->
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+    <script src="app.js"></script>
+</body>
+</html>
+EOF
