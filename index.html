@@ -151,13 +151,14 @@
             </div>
         </div>
 
-        <!-- ABA: HISTÓRICO -->
+        <!-- ABA: HISTÓRICO DINÂMICO -->
         <div id="tab-historico" class="tab-content">
             <div class="card">
                 <h3>Histórico de Ocorrências</h3>
-                <div style="background: #0B132B; padding: 12px; border-radius: 8px; font-size: 0.85rem; margin-top: 10px;">
-                    Sistema ativo e protegido na conta.
+                <div id="history-list" style="margin-top: 10px; display: flex; flex-direction: column; gap: 8px;">
+                    <div style="background: #0B132B; padding: 12px; border-radius: 8px; font-size: 0.85rem; color: var(--text-secondary);">Nenhum registo no histórico ainda.</div>
                 </div>
+                <button class="btn btn-red" style="background: transparent; border: 1px solid var(--accent-red); margin-top: 15px;" onclick="limparHistorico()">Limpar Histórico</button>
             </div>
         </div>
     </div>
@@ -168,6 +169,7 @@
     <script>
         let map, marker, protecaoAtiva = false, timerInterval = null;
         let meusContatos = [];
+        let meuHistorico = [];
 
         function verificarSessao() {
             const token = localStorage.getItem('sentinela_token');
@@ -176,6 +178,7 @@
                 document.getElementById('auth-screen').classList.remove('active');
                 document.getElementById('app-screen').classList.add('active');
                 if(email) document.getElementById('user-email-display').innerText = email;
+                carregarDadosSalvos();
                 setTimeout(initMap, 300);
             } else {
                 document.getElementById('auth-screen').classList.add('active');
@@ -189,6 +192,7 @@
             if(email && password) {
                 localStorage.setItem('sentinela_token', 'token_' + Date.now());
                 localStorage.setItem('sentinela_email', email);
+                registarHistorico("Sessão iniciada com sucesso.");
                 verificarSessao();
             }
         }
@@ -199,6 +203,7 @@
             if(email && password) {
                 localStorage.setItem('sentinela_token', 'token_' + Date.now());
                 localStorage.setItem('sentinela_email', email);
+                registarHistorico("Conta criada e sessão iniciada.");
                 verificarSessao();
             }
         }
@@ -234,13 +239,16 @@
             if (protecaoAtiva) {
                 badge.classList.add('status-active');
                 text.innerText = 'Proteção Ativa';
+                registarHistorico("Proteção ativada.");
             } else {
                 badge.classList.remove('status-active');
                 text.innerText = 'Proteção pausada';
+                registarHistorico("Proteção pausada.");
             }
         }
 
         function ativarJornada() {
+            const destino = document.getElementById('jornada-destino').value || 'Destino';
             const minutos = parseInt(document.getElementById('jornada-tempo').value) || 30;
             let totalSeconds = minutos * 60;
             document.getElementById('cronometro-box').style.display = 'block';
@@ -249,6 +257,7 @@
             timerInterval = setInterval(() => {
                 if (totalSeconds <= 0) {
                     clearInterval(timerInterval);
+                    registarHistorico("TEMPO ESGOTADO! Alarme de jornada disparado.");
                     return;
                 }
                 totalSeconds--;
@@ -256,16 +265,20 @@
                 let s = totalSeconds % 60;
                 document.getElementById('contador-tempo').innerText = `${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
             }, 1000);
+
+            registarHistorico(`Jornada iniciada para: ${destino} (${minutos} min).`);
         }
 
         function cancelarJornada() {
             if(timerInterval) clearInterval(timerInterval);
             document.getElementById('cronometro-box').style.display = 'none';
+            registarHistorico("Jornada concluída com sucesso (Cheguei bem).");
         }
 
         function testarPanicBiometrico() {
             if (window.CardioMonitor) {
                 window.CardioMonitor.analyzeHeartRate(135);
+                registarHistorico("Teste de pulsação SOS simulado (135 BPM).");
             }
         }
 
@@ -278,6 +291,7 @@
                     marker.setLatLng([lat, lng]);
                     document.getElementById('coords').innerText = `Lat: ${lat.toFixed(5)} | Long: ${lng.toFixed(5)}`;
                     document.getElementById('socorro-text').innerText = `ESTOU EM SITUAÇÃO DE RISCO! Preciso de ajuda urgente. Minha última localização: https://maps.google.com/?q=${lat},${lng}`;
+                    registarHistorico("Localização GPS atualizada.");
                 });
             }
         }
@@ -285,6 +299,7 @@
         function copiarMensagemSocorro() {
             const txt = document.getElementById('socorro-text').innerText;
             navigator.clipboard.writeText(txt);
+            registarHistorico("Mensagem rápida de socorro copiada.");
         }
 
         function adicionarContato() {
@@ -296,6 +311,7 @@
                 renderizarContatos();
                 document.getElementById('contact-name').value = '';
                 document.getElementById('contact-phone').value = '';
+                registarHistorico(`Contato adicionado: ${name}.`);
             }
         }
 
@@ -312,6 +328,58 @@
                     <a href="https://wa.me/${c.phone}?text=OLÁ%20PRECISO%20DE%20AJUDA%20URGENTE!" target="_blank" class="btn-whatsapp">💬 Chamar no WhatsApp</a>
                 </div>
             `).join('');
+        }
+
+        function registarHistorico(mensagem) {
+            const hora = new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+            meuHistorico.unshift({ hora, mensagem }); // Adiciona no início
+            guardarDadosSalvos();
+            renderizarHistorico();
+        }
+
+        function renderizarHistorico() {
+            const container = document.getElementById('history-list');
+            if (meuHistorico.length === 0) {
+                container.innerHTML = '<div style="background: #0B132B; padding: 12px; border-radius: 8px; font-size: 0.85rem; color: var(--text-secondary);">Nenhum registo no histórico ainda.</div>';
+                return;
+            }
+            container.innerHTML = meuHistorico.map(h => `
+                <div style="background: #0B132B; padding: 12px; border-radius: 8px; font-size: 0.85rem; border: 1px solid rgba(255,255,255,0.05);">
+                    <span style="color: var(--accent-cyan); font-weight: bold; font-size: 0.75rem; display: block; margin-bottom: 2px;">${h.hora}</span>
+                    <span style="color: var(--text-primary);">${h.mensagem}</span>
+                </div>
+            `).join('');
+        }
+
+        function limparHistorico() {
+            meuHistorico = [];
+            guardarDadosSalvos();
+            renderizarHistorico();
+        }
+
+        function guardarDadosSalvos() {
+            const email = localStorage.getItem('sentinela_email') || 'default';
+            localStorage.setItem('hist_' + email, JSON.stringify(meuHistorico));
+            localStorage.setItem('cont_' + email, JSON.stringify(meusContatos));
+        }
+
+        function carregarDadosSalvos() {
+            const email = localStorage.getItem('sentinela_email') || 'default';
+            const histSaved = localStorage.getItem('hist_' + email);
+            const contSaved = localStorage.getItem('cont_' + email);
+            
+            if (histSaved) {
+                meuHistorico = JSON.parse(histSaved);
+            } else {
+                meuHistorico = [];
+            }
+            if (contSaved) {
+                meusContatos = JSON.parse(contSaved);
+            } else {
+                meusContatos = [];
+            }
+            renderizarHistorico();
+            renderizarContatos();
         }
 
         if ("serviceWorker" in navigator) {
